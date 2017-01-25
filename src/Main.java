@@ -17,8 +17,9 @@ public class Main {
 	
 	int rows = 0;
 	int columns = 0;
-	int[][] eInputs;
-	int[][] tMatrix;
+	
+	int[][] input;
+	int[][] transition_table;
 	
 	public Main(String input, String matrix) throws FileNotFoundException{
 		FileReader(input, "i");
@@ -50,7 +51,7 @@ public class Main {
 		
 		if (type == "e"){
 			//initializes the T Matrix with the read number of rows and columns
-			this.tMatrix = new int[rows][columns];
+			this.transition_table = new int[rows][columns];
 			
 			//srow and scol keep track of the current row and column being added to the T Matrix
 			int srow = 0;
@@ -66,10 +67,10 @@ public class Main {
 				for (int j = 0; j < columnArray.length; j++){
 					if (columnArray[j].length() > 0){
 						int num = Integer.parseInt(columnArray[j]);
-						this.tMatrix[srow][scol] = num;
+						this.transition_table[srow][scol] = num;
 					}
 					else{
-						this.tMatrix[srow][scol] = 0;
+						this.transition_table[srow][scol] = 0;
 					}
 					scol++;
 				}
@@ -81,7 +82,7 @@ public class Main {
 		
 		else if (type == "i"){
 			//initializes the external inputs with the read number of rows and columns
-			this.eInputs = new int[rows][columns];
+			this.input = new int[rows][columns];
 			
 			//srow and scol keep track of the current row and column being added to the external inputs
 			int srow = 0;
@@ -97,10 +98,10 @@ public class Main {
 				for (int j = 0; j < columnArray.length; j++){
 					if (columnArray[j].length() > 0){
 						int num = Integer.parseInt(columnArray[j]);
-						this.eInputs[srow][scol] = num;
+						this.input[srow][scol] = num;
 					}
 					else{
-						this.eInputs[srow][scol] = 0;
+						this.input[srow][scol] = 0;
 					}
 					scol++;
 				}
@@ -121,20 +122,20 @@ public class Main {
 	//method for printing the matrix to the console 
 	public void PrintMatrix(String type){
 		if (type == "e"){
-			for (int i = 0; i < this.tMatrix.length; i++){
-				for (int j = 0; j < this.tMatrix[i].length; j++){
-					System.out.print(this.tMatrix[i][j]);
-					if (j != this.tMatrix[i].length - 1)
+			for (int i = 0; i < this.transition_table.length; i++){
+				for (int j = 0; j < this.transition_table[i].length; j++){
+					System.out.print(this.transition_table[i][j]);
+					if (j != this.transition_table[i].length - 1)
 						System.out.print(", ");
 				}
 				System.out.print("\n");
 			}
 		}
 		else if (type == "i"){
-			for (int i = 0; i < this.eInputs.length; i++){
-				for (int j = 0; j < this.eInputs[i].length; j++){
-					System.out.print(this.eInputs[i][j]);
-					if (j != this.eInputs[i].length - 1)
+			for (int i = 0; i < this.input.length; i++){
+				for (int j = 0; j < this.input[i].length; j++){
+					System.out.print(this.input[i][j]);
+					if (j != this.input[i].length - 1)
 						System.out.print(", ");
 				}
 				System.out.print("\n");

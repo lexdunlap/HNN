@@ -18,7 +18,7 @@ public class Main {
 	int rows = 0;
 	int columns = 0;
 	
-	int[][] input;
+	int[] input;
 	int[][] transition_table;
 	
 	public Main(String input, String matrix) throws FileNotFoundException{
@@ -82,7 +82,7 @@ public class Main {
 		
 		else if (type == "i"){
 			//initializes the external inputs with the read number of rows and columns
-			this.input = new int[rows][columns];
+			this.input = new int[rows];
 			
 			//srow and scol keep track of the current row and column being added to the external inputs
 			int srow = 0;
@@ -98,10 +98,10 @@ public class Main {
 				for (int j = 0; j < columnArray.length; j++){
 					if (columnArray[j].length() > 0){
 						int num = Integer.parseInt(columnArray[j]);
-						this.input[srow][scol] = num;
+						this.input[srow] = num;
 					}
 					else{
-						this.input[srow][scol] = 0;
+						this.input[srow] = 0;
 					}
 					scol++;
 				}
@@ -122,6 +122,7 @@ public class Main {
 	//method for printing the matrix to the console 
 	public void PrintMatrix(String type){
 		if (type == "e"){
+			System.out.println("T Matrix:");
 			for (int i = 0; i < this.transition_table.length; i++){
 				for (int j = 0; j < this.transition_table[i].length; j++){
 					System.out.print(this.transition_table[i][j]);
@@ -132,13 +133,11 @@ public class Main {
 			}
 		}
 		else if (type == "i"){
+			System.out.println("External Inputs:");
 			for (int i = 0; i < this.input.length; i++){
-				for (int j = 0; j < this.input[i].length; j++){
-					System.out.print(this.input[i][j]);
-					if (j != this.input[i].length - 1)
-						System.out.print(", ");
-				}
-				System.out.print("\n");
+				System.out.print(this.input[i]);
+				if (i != this.input.length - 1)
+					System.out.print(", ");
 			}
 		}
 		else{

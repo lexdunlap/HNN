@@ -15,17 +15,19 @@ import java.util.Scanner;
 public class Main {
 	//instantiate rows columns and T Matrix variables
 	
-	int rows = 0;
-	int columns = 0;
+	private int rows = 0;
+	private int columns = 0;
 	
-	int[] input;
-	int[][] transition_table;
+	static int nValue;
+	static int[] input;
+	static int[][] transition_table;
 	
 	public Main(String input, String matrix) throws FileNotFoundException{
 		FileReader(input, "i");
 		FileReader(matrix, "e");
 		PrintMatrix("e");
 		PrintMatrix("i");
+		Hopfield_Network hn = new Hopfield_Network(1, Main.nValue, 1, 2);
 	}
 	
 	public void FileReader(String fileName, String type) throws FileNotFoundException{
@@ -43,6 +45,7 @@ public class Main {
 			lineArray = a.split("\n");	
 			Collections.addAll(rowArrays, lineArray);
 		}
+		Main.nValue = rows;
 		
 		//determines the number of columns by splitting an element of the ArrayList into segments based on commas
 		for (int i = 0; i < 1; i++){
@@ -51,7 +54,7 @@ public class Main {
 		
 		if (type == "e"){
 			//initializes the T Matrix with the read number of rows and columns
-			this.transition_table = new int[rows][columns];
+			Main.transition_table = new int[rows][columns];
 			
 			//srow and scol keep track of the current row and column being added to the T Matrix
 			int srow = 0;
@@ -67,10 +70,10 @@ public class Main {
 				for (int j = 0; j < columnArray.length; j++){
 					if (columnArray[j].length() > 0){
 						int num = Integer.parseInt(columnArray[j]);
-						this.transition_table[srow][scol] = num;
+						Main.transition_table[srow][scol] = num;
 					}
 					else{
-						this.transition_table[srow][scol] = 0;
+						Main.transition_table[srow][scol] = 0;
 					}
 					scol++;
 				}
@@ -82,7 +85,7 @@ public class Main {
 		
 		else if (type == "i"){
 			//initializes the external inputs with the read number of rows and columns
-			this.input = new int[rows];
+			Main.input = new int[rows];
 			
 			//srow and scol keep track of the current row and column being added to the external inputs
 			int srow = 0;
@@ -98,10 +101,10 @@ public class Main {
 				for (int j = 0; j < columnArray.length; j++){
 					if (columnArray[j].length() > 0){
 						int num = Integer.parseInt(columnArray[j]);
-						this.input[srow] = num;
+						Main.input[srow] = num;
 					}
 					else{
-						this.input[srow] = 0;
+						Main.input[srow] = 0;
 					}
 					scol++;
 				}
@@ -120,13 +123,13 @@ public class Main {
 	}
 	
 	//method for printing the matrix to the console 
-	public void PrintMatrix(String type){
+	public static void PrintMatrix(String type){
 		if (type == "e"){
 			System.out.println("T Matrix:");
-			for (int i = 0; i < this.transition_table.length; i++){
-				for (int j = 0; j < this.transition_table[i].length; j++){
-					System.out.print(this.transition_table[i][j]);
-					if (j != this.transition_table[i].length - 1)
+			for (int i = 0; i < Main.transition_table.length; i++){
+				for (int j = 0; j < Main.transition_table[i].length; j++){
+					System.out.print(Main.transition_table[i][j]);
+					if (j != Main.transition_table[i].length - 1)
 						System.out.print(", ");
 				}
 				System.out.print("\n");
@@ -134,11 +137,12 @@ public class Main {
 		}
 		else if (type == "i"){
 			System.out.println("External Inputs:");
-			for (int i = 0; i < this.input.length; i++){
-				System.out.print(this.input[i]);
-				if (i != this.input.length - 1)
+			for (int i = 0; i < Main.input.length; i++){
+				System.out.print(Main.input[i]);
+				if (i != Main.input.length - 1)
 					System.out.print(", ");
 			}
+			System.out.print("\n");
 		}
 		else{
 			System.out.println("Print Error: Incorrect file type");
@@ -146,7 +150,7 @@ public class Main {
 	}
 	public static void main(String[] args) throws FileNotFoundException {
 		// Create a new instance of the Main
-		new Main("inputs.csv", "hashi1.csv");
+		new Main("inputs.csv", "smallNetwork.csv");
 
 	}
 

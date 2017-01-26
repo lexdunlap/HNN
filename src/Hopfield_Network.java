@@ -27,6 +27,7 @@ public class Hopfield_Network
      */
     public Hopfield_Network(int k, int n, double alpha, double step_size)
     {
+    	//
         this.k = k;
         this.n = n;
         this.step_size = step_size;
@@ -99,6 +100,7 @@ public class Hopfield_Network
     {
         for (int i = 0; i < n; i++)
         {
+        	activation = new double[n];
             activation[i] = (2 * alpha) * (k / n) - alpha;
         }
     }

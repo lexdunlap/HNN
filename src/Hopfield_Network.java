@@ -72,6 +72,9 @@ public class Hopfield_Network
         }
         }
     }
+    public int[][] getTransitionTable(){
+    	return transition_table;
+    }
     
     public double[] getOuput(){
     	return output;

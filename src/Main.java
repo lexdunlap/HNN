@@ -23,13 +23,13 @@ public class Main {
 	private int[] input;
 	private int[][] transition_table;
 	
-	public Main(String ip, String matrix) throws FileNotFoundException{
+	public Main(String ip) throws FileNotFoundException{
 		FileReader(ip, "i");
-		FileReader(matrix, "e");
-		PrintMatrix("e");
 		PrintMatrix("i");
 		Hopfield_Network hn = new Hopfield_Network(1, nValue, 1, input, 2);
-		output = hn.getOuput();
+		this.transition_table = hn.getTransitionTable();
+		PrintMatrix("e");
+		this.output = hn.getOuput();
 		PrintMatrix("o");
 		
 	}
@@ -49,45 +49,13 @@ public class Main {
 			lineArray = a.split("\n");	
 			Collections.addAll(rowArrays, lineArray);
 		}
-		nValue = rows;
 		
 		//determines the number of columns by splitting an element of the ArrayList into segments based on commas
 		for (int i = 0; i < 1; i++){
 			columns = lineArray[i].split("\\,", -1).length;
 		}
 		
-		if (type == "e"){
-			//initializes the T Matrix with the read number of rows and columns
-			transition_table = new int[rows][columns];
-			
-			//srow and scol keep track of the current row and column being added to the T Matrix
-			int srow = 0;
-			int scol = 0;
-			
-			//Loop to input values into T Matrix
-			for (int i = 0; i < rowArrays.size(); i++){
-				//extract element of the ArrayList which holds rows of data and split them into an array that holds each element for the row
-				String row = rowArrays.get(i);
-				String[] columnArray = row.split(",");
-				
-				//For each element in the newly created array parse into an int and add to T Matrix at the location [srow][scol]
-				for (int j = 0; j < columnArray.length; j++){
-					if (columnArray[j].length() > 0){
-						int num = Integer.parseInt(columnArray[j]);
-						transition_table[srow][scol] = num;
-					}
-					else{
-						transition_table[srow][scol] = 0;
-					}
-					scol++;
-				}
-				//add to the row value while resetting the column value to zero before next loop iteration
-				scol = 0;
-				srow++;
-			}
-		}
-		
-		else if (type == "i"){
+		if (type == "i"){
 			//initializes the external inputs with the read number of rows and columns
 			input = new int[rows];
 			
@@ -115,6 +83,7 @@ public class Main {
 				//add to the row value while resetting the column value to zero before next loop iteration
 				scol = 0;
 				srow++;
+				nValue = input.length;
 			}
 		}
 		else{
@@ -163,7 +132,7 @@ public class Main {
 	}
 	public static void main(String[] args) throws FileNotFoundException {
 		// Create a new instance of the Main
-		new Main("smallInputs.csv", "smallNetwork.csv");
+		new Main("example inputs.csv");
 
 	}
 

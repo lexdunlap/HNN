@@ -10,11 +10,13 @@ public class Hopfield_Network
 
     private boolean converged;                      // Flips when the network converges to a stable energy level
     private int k, n;                               // k-neurons out of n total neurons
-    private int[] input, output;                    // I-Vector ; V-Vector
+    private int[] input;                            // I-Vector
     private int[][] transition_table;               // T-Matrix
 
     private double alpha, tau, step_size;           // Programmer-defined alpha value
-    private double[] activation;                    // U-Vector
+    private double[] activation,                    // U-Vector
+            output,                                 // V-Vector
+            prev_output;                            // V(t-1)-Vector
 
     /**
      * Creates Hopfield Network, setting all initial programmer-defined values. Also generates
@@ -27,12 +29,15 @@ public class Hopfield_Network
      */
     public Hopfield_Network(int k, int n, double alpha, double step_size)
     {
-    	//
         this.k = k;
         this.n = n;
         this.step_size = step_size;
         this.alpha = alpha;
         tau = 2 * alpha;
+        transition_table = new int[n][n];
+        activation = new double[n];
+        output = new double[n];
+        prev_output = new double[n];
         gen_trans_table();
         init_activation();
     }
@@ -40,19 +45,30 @@ public class Hopfield_Network
     /**
      * Continually updates and calculates the activation of all neurons until convergence is reached.
      *
-     * #TODO: How to check convergence?
+     * #TODO: Set stability when g(u) is non-decreasing (?)
      */
-    public void run()
+    public double[] run()
     {
         while (!converged)
         {
+            int convergence_count = 0;
             for(int i = 0; i < n; i++)
             {
+                prev_output[i] = output[i];
                 update_neuron(i);
                 neuron_activation(i);
+
+                if (output[i] == prev_output[i])
+                {
+                    convergence_count++;
+                }
             }
-        // TODO: Test convergence -- how??
+        if (convergence_count >= k)
+        {
+            converged = true;
         }
+        }
+        return output;
     }
 
     /**
@@ -77,8 +93,6 @@ public class Hopfield_Network
      */
     private void gen_trans_table()
     {
-        transition_table = new int[n][n];
-
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)
@@ -100,16 +114,8 @@ public class Hopfield_Network
     {
         for (int i = 0; i < n; i++)
         {
-        	activation = new double[n];
             activation[i] = (2 * alpha) * (k / n) - alpha;
         }
-    }
-
-    /**
-     * TODO: Add method for selecting k-out-of-n neurons for a given neuron category.
-     */
-    private void k_out_of_n()
-    {
     }
 
     /**
@@ -168,16 +174,14 @@ public class Hopfield_Network
      * @param index
      * @return
      */
-    private double neuron_activation(int index)
+    private void neuron_activation(int index)
     {
         if(activation[index] >= this.alpha)
-            return 1.0;
+            output[index] = 1.0;
         else if (Math.abs(activation[index]) <= this.alpha)
-            return ((activation[index] + this.alpha) / (2 * this.alpha));
+            output[index] = ((activation[index] + this.alpha) / (2 * this.alpha));
         else if (activation[index] <= -1 * this.alpha)
-            return 0.0;
-        else
-            return -1.0;
+            output[index] = 0.0;
     }
 
 }

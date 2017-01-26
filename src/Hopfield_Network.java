@@ -27,12 +27,14 @@ public class Hopfield_Network
      * @param n total number of neurons
      * @param alpha activation threshold value for determining neuron response
      */
-    public Hopfield_Network(int k, int n, double alpha, double step_size)
+    public Hopfield_Network(int k, int n, double alpha, int[] inputValue, double step_size)
     {
+    	this.converged = false;
         this.k = k;
         this.n = n;
         this.step_size = step_size;
         this.alpha = alpha;
+        this.input = inputValue;
         tau = 2 * alpha;
         transition_table = new int[n][n];
         activation = new double[n];
@@ -40,6 +42,7 @@ public class Hopfield_Network
         prev_output = new double[n];
         gen_trans_table();
         init_activation();
+        run();
     }
 
     /**
@@ -47,7 +50,7 @@ public class Hopfield_Network
      *
      * #TODO: Set stability when g(u) is non-decreasing (?)
      */
-    public double[] run()
+    public void run()
     {
         while (!converged)
         {
@@ -68,7 +71,10 @@ public class Hopfield_Network
             converged = true;
         }
         }
-        return output;
+    }
+    
+    public double[] getOuput(){
+    	return output;
     }
 
     /**

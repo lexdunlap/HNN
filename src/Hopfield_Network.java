@@ -1,3 +1,5 @@
+import jdk.nashorn.internal.objects.annotations.Setter;
+
 import java.lang.Math;
 
 /**
@@ -6,6 +8,7 @@ import java.lang.Math;
 public class Hopfield_Network
 {
 
+    private boolean converged;                      // Flips when the network converges to a stable energy level
     private int k, n;                               // k-neurons out of n total neurons
     private int[] input, output;                    // I-Vector ; V-Vector
     private int[][] transition_table;               // T-Matrix
@@ -14,26 +17,62 @@ public class Hopfield_Network
     private double[] activation;                    // U-Vector
 
     /**
-     *
+     * Creates Hopfield Network, setting all initial programmer-defined values. Also generates
+     * the transition table weight matrix based on neuron connections, as well as generating
+     * the initial values for the activation vector (u-vector).
      *
      * @param k number of selected neurons out of total n
      * @param n total number of neurons
-     * @param alpha
-     * @param num_inputs
+     * @param alpha activation threshold value for determining neuron response
      */
-    public Hopfield_Network(int k, int n, double alpha, int num_inputs)
+    public Hopfield_Network(int k, int n, double alpha, double step_size)
     {
         this.k = k;
         this.n = n;
+        this.step_size = step_size;
         this.alpha = alpha;
         tau = 2 * alpha;
-        input = new int[num_inputs];
         gen_trans_table();
+        init_activation();
     }
 
     /**
-     * Generates the transition table (weight matrix).
+     * Continually updates and calculates the activation of all neurons until convergence is reached.
      *
+     * #TODO: How to check convergence?
+     */
+    public void run()
+    {
+        while (!converged)
+        {
+            for(int i = 0; i < n; i++)
+            {
+                update_neuron(i);
+                neuron_activation(i);
+            }
+        // TODO: Test convergence -- how??
+        }
+    }
+
+    /**
+     * Used for inputting an input vector into the inner input matrix of the
+     * Hopfield Network class.
+     *
+     * @param i_vector row vector of input values.
+     */
+    @Setter public void load_inputs(int[] i_vector)
+    {
+        input = i_vector;
+    }
+
+    /**
+     * Generates the transition table (weight matrix). Currently, assigns weights of -2 for each
+     * neuron pair, excluding self connections, which are instead assigned values of 0.
+     *
+     * Automatically applies the calculated weights to the transition_table class variable for
+     * each connection from neuron i -> neuron j.
+     *
+     * TODO: Allow for multiple categories of neurons, assigning -2 for each common category.
      */
     private void gen_trans_table()
     {
@@ -52,7 +91,20 @@ public class Hopfield_Network
     }
 
     /**
+     * Generates the initial activation level for each neuron - calculated by taking (2kα/n)-α.
      *
+     * TODO: Add perturbation to these initial u-values.
+     */
+    private void init_activation()
+    {
+        for (int i = 0; i < n; i++)
+        {
+            activation[i] = (2 * alpha) * (k / n) - alpha;
+        }
+    }
+
+    /**
+     * TODO: Add method for selecting k-out-of-n neurons for a given neuron category.
      */
     private void k_out_of_n()
     {
@@ -64,7 +116,7 @@ public class Hopfield_Network
      *
      * @param index of neuron to be updated
      */
-    private void update_neurons(int index)
+    private void update_neuron(int index)
     {
         double trans_output_dot = 0;
         for (int j = 0; j < n; j++)
@@ -82,7 +134,10 @@ public class Hopfield_Network
     /**
      * Lyapunov Energy equation. Represents the cost function for a given Hopfield Network to minimize.
      *
-     * @return
+     * NOTE: Apparently only used for 'network design'? Might not be the loss function for gradient descent learning.
+     * Has been stated that the dynamical system might be a better computational representation.
+     *
+     * @return calculated lyapunov energy value for the current Hopfield system.
      */
     private double lyapunov()
     {
@@ -102,13 +157,22 @@ public class Hopfield_Network
         return (-.5 * weighted_output_sum - input_output_sum);
     }
 
-    private double neuron_activation(double u)
+    /**
+     * Corresponds to g(u_i). Given a programmer-defined constant alpha, which represents the activation
+     * thresholding (or bounds) for all neurons in the network. Comparing the current neuron response,
+     * represented by an index i in the activation vector (u-vector), against this alpha determines the
+     * current output response of the given neuron.
+     *
+     * @param index
+     * @return
+     */
+    private double neuron_activation(int index)
     {
-        if(u >= this.alpha)
+        if(activation[index] >= this.alpha)
             return 1.0;
-        else if (Math.abs(u) <= this.alpha)
-            return ((u + this.alpha) / (2 * this.alpha));
-        else if (u <= -1 * this.alpha)
+        else if (Math.abs(activation[index]) <= this.alpha)
+            return ((activation[index] + this.alpha) / (2 * this.alpha));
+        else if (activation[index] <= -1 * this.alpha)
             return 0.0;
         else
             return -1.0;

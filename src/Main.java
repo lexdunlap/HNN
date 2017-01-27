@@ -26,6 +26,7 @@ public class Main {
 	public Main(String ip) throws FileNotFoundException{
 		FileReader(ip, "i");
 		PrintMatrix("i");
+		System.out.print(input);
 		Hopfield_Network hn = new Hopfield_Network(1, nValue, 1, input, 2);
 		this.transition_table = hn.getTransitionTable();
 		PrintMatrix("e");
@@ -132,7 +133,7 @@ public class Main {
 	}
 	public static void main(String[] args) throws FileNotFoundException {
 		// Create a new instance of the Main
-		new Main("example inputs.csv");
+		new Main("inputs.csv");
 
 	}
 

@@ -1,13 +1,12 @@
 import jdk.nashorn.internal.objects.annotations.Setter;
-
 import java.lang.Math;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by Michael on 13/12/16.
  */
 public class Hopfield_Network
 {
-
     private boolean converged;                      // Flips when the network converges to a stable energy level
     private int k, n;                               // k-neurons out of n total neurons
     private int[] input;                            // I-Vector
@@ -36,10 +35,12 @@ public class Hopfield_Network
         this.alpha = alpha;
         this.input = inputValue;
         tau = 2 * alpha;
+
         transition_table = new int[n][n];
         activation = new double[n];
         output = new double[n];
         prev_output = new double[n];
+
         gen_trans_table();
         init_activation();
         run();
@@ -47,14 +48,14 @@ public class Hopfield_Network
 
     /**
      * Continually updates and calculates the activation of all neurons until convergence is reached.
-     *
-     * #TODO: Set stability when g(u) is non-decreasing (?)
      */
     public void run()
     {
         while (!converged)
         {
             int convergence_count = 0;
+            activation = shuffle(activation);
+
             for(int i = 0; i < n; i++)
             {
                 prev_output[i] = output[i];
@@ -131,11 +132,15 @@ public class Hopfield_Network
      * Calculates the dynamical system formula for a Hopfield Network detailing the change in activation
      * energy for a specific neuron against a change in time.
      *
+     * #TODO: Add asynchronous updating with random selection. Firing order?
+     *
      * @param index of neuron to be updated
      */
     private void update_neuron(int index)
     {
         double trans_output_dot = 0;
+
+
         for (int j = 0; j < n; j++)
         {
             if (j == index)
@@ -148,30 +153,11 @@ public class Hopfield_Network
         activation[index] += trans_output_dot * step_size;
     }
 
-    /**
-     * Lyapunov Energy equation. Represents the cost function for a given Hopfield Network to minimize.
-     *
-     * NOTE: Apparently only used for 'network design'? Might not be the loss function for gradient descent learning.
-     * Has been stated that the dynamical system might be a better computational representation.
-     *
-     * @return calculated lyapunov energy value for the current Hopfield system.
-     */
-    private double lyapunov()
+    private void asynchronous_updating(int index)
     {
-        double weighted_output_sum = 0,
-                input_output_sum = 0;
+        double trans_output_dot = 0;
 
-        for (int i = 0; i < n; i++)
-        {
-            input_output_sum += input[i] * output[i];
-
-            for (int j = 0; j < n; j++)
-            {
-                weighted_output_sum += transition_table[i][j] * output[i] * output[j];
-            }
-        }
-
-        return (-.5 * weighted_output_sum - input_output_sum);
+        // TODO: pick a random value that has not already been updated
     }
 
     /**
@@ -191,6 +177,25 @@ public class Hopfield_Network
             output[index] = ((activation[index] + this.alpha) / (2 * this.alpha));
         else if (activation[index] <= -1 * this.alpha)
             output[index] = 0.0;
+    }
+
+    /**
+     * Shuffles an array using the Fisher-Yates shuffling method - an optimally efficient shuffling
+     *    algorithm returning unbiased results when paired with an unbiased random number generator.
+     */
+    private double[] shuffle(double[] array)
+    {
+        double temp;
+
+        for (int i = n; i > 0; i--)
+        {
+            int index = ThreadLocalRandom.current().nextInt(0, i+1);
+            temp = array[i];
+            array[i] = array[index];
+            array[index] = temp;
+        }
+
+        return array;
     }
 
 }

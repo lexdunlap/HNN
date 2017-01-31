@@ -1,5 +1,6 @@
 import jdk.nashorn.internal.objects.annotations.Setter;
 import java.lang.Math;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -9,7 +10,7 @@ public class Hopfield_Network
 {
     private boolean converged;                      // Flips when the network converges to a stable energy level
     private int k, n;                               // k-neurons out of n total neurons
-    private int[] input;                            // I-Vector
+    private int[] input, firing_order;              // I-Vector
     private int[][] transition_table;               // T-Matrix
 
     private double alpha, tau, step_size;           // Programmer-defined alpha value
@@ -40,6 +41,12 @@ public class Hopfield_Network
         activation = new double[n];
         output = new double[n];
         prev_output = new double[n];
+        firing_order = new int[n];
+
+        for (int i = 0; i < n; i++)
+        {
+            firing_order[i] = i;
+        }
 
         gen_trans_table();
         init_activation();
@@ -54,23 +61,26 @@ public class Hopfield_Network
         while (!converged)
         {
             int convergence_count = 0;
-            activation = shuffle(activation);
+//            System.out.print("Before: " + Arrays.toString(activation));
+            firing_order = shuffle(firing_order);
+//            System.out.print("After: " + Arrays.toString(activation));
 
             for(int i = 0; i < n; i++)
             {
-                prev_output[i] = output[i];
-                update_neuron(i);
-                neuron_activation(i);
+                int index = firing_order[i];
+                prev_output[index] = output[index];
+                update_neuron(index);
+                neuron_activation(index);
 
-                if (output[i] == prev_output[i])
+                if (output[index] == prev_output[index])
                 {
                     convergence_count++;
                 }
             }
-        if (convergence_count >= k)
-        {
-            converged = true;
-        }
+            if (convergence_count >= k)
+            {
+                converged = true;
+            }
         }
     }
     public int[][] getTransitionTable(){
@@ -122,17 +132,17 @@ public class Hopfield_Network
      */
     private void init_activation()
     {
+        double rand;
         for (int i = 0; i < n; i++)
         {
-            activation[i] = (2 * alpha) * (k / n) - alpha;
+            rand = ThreadLocalRandom.current().nextDouble(0.8, 1.2);
+            activation[i] = rand * ((2 * alpha) * (k / n) - alpha);
         }
     }
 
     /**
      * Calculates the dynamical system formula for a Hopfield Network detailing the change in activation
      * energy for a specific neuron against a change in time.
-     *
-     * #TODO: Add asynchronous updating with random selection. Firing order?
      *
      * @param index of neuron to be updated
      */
@@ -183,13 +193,13 @@ public class Hopfield_Network
      * Shuffles an array using the Fisher-Yates shuffling method - an optimally efficient shuffling
      *    algorithm returning unbiased results when paired with an unbiased random number generator.
      */
-    private double[] shuffle(double[] array)
+    private int[] shuffle(int[] array)
     {
-        double temp;
+        int temp;
 
-        for (int i = n; i > 0; i--)
+        for (int i = n - 1; i > 0; i--)
         {
-            int index = ThreadLocalRandom.current().nextInt(0, i+1);
+            int index = ThreadLocalRandom.current().nextInt(0, i);
             temp = array[i];
             array[i] = array[index];
             array[index] = temp;
@@ -198,4 +208,36 @@ public class Hopfield_Network
         return array;
     }
 
+//    /**
+//     * Shuffles activation array and all related elements of all other data structures (transition table,
+//     *    outputs, and previous outputs) in accordance with the Fisher-Yates shuffling method described
+//     *    in the shuffle() method above.
+//     *
+//     * TODO: Should all be shuffled or only the activation? This method may not be necessary.
+//     */
+//    private void shuffle_all()
+//    {
+//        double[] temp = new double[3];
+//        int[] temp_row = new int[n];
+//
+//        for (int i = n - 1; i > 0; i--)
+//        {
+//            int index = ThreadLocalRandom.current().nextInt(0, i);
+//
+//            temp[0] = activation[i];
+//            temp[1] = output[i];
+//            temp[2] = prev_output[i];
+//            temp_row = transition_table[i];
+//
+//            activation[i] = activation[index];
+//            output[i] = output[index];
+//            prev_output[i] = prev_output[index];
+//            transition_table[i] = transition_table[index];
+//
+//            activation[index] = temp[0];
+//            output[index] = temp[1];
+//            prev_output[index] = temp[2];
+//            transition_table[index] = temp_row;
+//        }
+//    }
 }

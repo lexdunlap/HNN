@@ -13,7 +13,7 @@ public class Hopfield_Network
     private int[] input, firing_order;              // I-Vector
     private int[][] transition_table;               // T-Matrix
 
-    private double alpha, tau, step_size;           // Programmer-defined alpha value
+    private double alpha, tau, step_size, margin;   // Programmer-defined alpha value
     private double[] activation,                    // U-Vector
             output,                                 // V-Vector
             prev_output;                            // V(t-1)-Vector
@@ -36,7 +36,10 @@ public class Hopfield_Network
         this.alpha = alpha;
         this.input = inputValue;
         tau = 2 * alpha;
+        margin = .01;
 
+
+        transition_table = new int[n][n];
         transition_table = new int[n][n];
         activation = new double[n];
         output = new double[n];
@@ -49,7 +52,7 @@ public class Hopfield_Network
         }
 
         gen_trans_table();
-        init_activation();
+        init_activation(.3);
         run();
     }
 
@@ -61,25 +64,22 @@ public class Hopfield_Network
         while (!converged)
         {
             int convergence_count = 0;
-//            System.out.print("Before: " + Arrays.toString(activation));
             firing_order = shuffle(firing_order);
-//            System.out.print("After: " + Arrays.toString(activation));
 
-            for(int i = 0; i < n; i++)
-            {
+            for(int i = 0; i < n; i++) {
                 int index = firing_order[i];
-                prev_output[index] = output[index];
                 update_neuron(index);
                 neuron_activation(index);
 
-                if (output[index] == prev_output[index])
-                {
+                if ((output[index] == prev_output[index]) &&
+                        ((output[index] * (1 - output[index])) <= margin)) {
                     convergence_count++;
                 }
-            }
-            if (convergence_count >= k)
-            {
-                converged = true;
+                if (convergence_count >= k)
+                {
+                    converged = true;
+                }
+                prev_output[index] = output[index];
             }
         }
     }
@@ -130,12 +130,12 @@ public class Hopfield_Network
      *
      * TODO: Add perturbation to these initial u-values.
      */
-    private void init_activation()
+    private void init_activation(double percent)
     {
         double rand;
         for (int i = 0; i < n; i++)
         {
-            rand = ThreadLocalRandom.current().nextDouble(0.8, 1.2);
+            rand = ThreadLocalRandom.current().nextDouble(1 - percent, 1 + percent);
             activation[i] = rand * ((2 * alpha) * (k / n) - alpha);
         }
     }
@@ -163,13 +163,6 @@ public class Hopfield_Network
         activation[index] += trans_output_dot * step_size;
     }
 
-    private void asynchronous_updating(int index)
-    {
-        double trans_output_dot = 0;
-
-        // TODO: pick a random value that has not already been updated
-    }
-
     /**
      * Corresponds to g(u_i). Given a programmer-defined constant alpha, which represents the activation
      * thresholding (or bounds) for all neurons in the network. Comparing the current neuron response,
@@ -193,12 +186,10 @@ public class Hopfield_Network
      * Shuffles an array using the Fisher-Yates shuffling method - an optimally efficient shuffling
      *    algorithm returning unbiased results when paired with an unbiased random number generator.
      */
-    private int[] shuffle(int[] array)
-    {
+    private int[] shuffle(int[] array) {
         int temp;
 
-        for (int i = n - 1; i > 0; i--)
-        {
+        for (int i = n - 1; i > 0; i--) {
             int index = ThreadLocalRandom.current().nextInt(0, i);
             temp = array[i];
             array[i] = array[index];
@@ -207,37 +198,4 @@ public class Hopfield_Network
 
         return array;
     }
-
-//    /**
-//     * Shuffles activation array and all related elements of all other data structures (transition table,
-//     *    outputs, and previous outputs) in accordance with the Fisher-Yates shuffling method described
-//     *    in the shuffle() method above.
-//     *
-//     * TODO: Should all be shuffled or only the activation? This method may not be necessary.
-//     */
-//    private void shuffle_all()
-//    {
-//        double[] temp = new double[3];
-//        int[] temp_row = new int[n];
-//
-//        for (int i = n - 1; i > 0; i--)
-//        {
-//            int index = ThreadLocalRandom.current().nextInt(0, i);
-//
-//            temp[0] = activation[i];
-//            temp[1] = output[i];
-//            temp[2] = prev_output[i];
-//            temp_row = transition_table[i];
-//
-//            activation[i] = activation[index];
-//            output[i] = output[index];
-//            prev_output[i] = prev_output[index];
-//            transition_table[i] = transition_table[index];
-//
-//            activation[index] = temp[0];
-//            output[index] = temp[1];
-//            prev_output[index] = temp[2];
-//            transition_table[index] = temp_row;
-//        }
-//    }
 }

@@ -27,7 +27,7 @@ public class Main {
 		FileReader(ip, "i");
 		PrintMatrix("i");
 		System.out.print(input);
-		Hopfield_Network hn = new Hopfield_Network(1, nValue, 1, input, 2);
+		Hopfield_Network hn = new Hopfield_Network(1, nValue, 1, input, .1);
 		this.transition_table = hn.getTransitionTable();
 		PrintMatrix("e");
 		this.output = hn.getOuput();

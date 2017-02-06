@@ -1,5 +1,7 @@
 import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
+import tester.Test;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,10 +38,14 @@ public class Main {
             int[][] inputs = read_inputs(in_file, num_inputs, num_neurons);
             int[][][] weights = read_weights(weight_file, num_inputs, num_neurons);
 
-            System.out.print("Initialisation done. Beginning testing now.");
+            System.out.print("Initialisation done. Beginning testing now.\n");
+            
             for (int i = 0; i < num_inputs; i++) {
                 Hopfield_Network hn = new Hopfield_Network(1, num_neurons, 1, inputs[i], weights[i], .1);
                 this.transition_table = hn.getTransitionTable();
+                Test r = new Test(this.transition_table);
+                String results = r.getResults();
+                System.out.println(results);
                 PrintMatrix("e");
                 this.output = hn.getOuput();
                 PrintMatrix("o");

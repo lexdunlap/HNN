@@ -7,12 +7,9 @@ import java.util.Scanner;
 import java.util.stream.Stream;
 
 /**
- * 
- */
-
-/**
- * @author dunlap
+ * Main class for testing Hopfield_Network class.
  *
+ * TODO: Fill out javadocs.
  */
 public class Main {
 	//instantiate rows columns and T Matrix variables
@@ -24,7 +21,9 @@ public class Main {
 	private int nValue;
 	private int[] input;
 	private int[][] transition_table;
-	
+
+    // TODO: Migrate to read_inputs and read_weights methods for automatic testing.
+    // TODO: Add loop for automatic testing.
 	public Main(String ip) throws FileNotFoundException{
 		FileReader(ip, "i");
 		PrintMatrix("i");

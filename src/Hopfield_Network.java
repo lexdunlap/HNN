@@ -4,7 +4,9 @@ import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Created by Michael on 13/12/16.
+ * Hopfield Network class.
+ *
+ * TODO: Fill out javadocs.
  */
 public class Hopfield_Network
 {
@@ -23,23 +25,24 @@ public class Hopfield_Network
      * the transition table weight matrix based on neuron connections, as well as generating
      * the initial values for the activation vector (u-vector).
      *
+     * TODO: Add int[][] transition_table pass-through from Main file.
+     *
      * @param k number of selected neurons out of total n
      * @param n total number of neurons
      * @param alpha activation threshold value for determining neuron response
      */
-    public Hopfield_Network(int k, int n, double alpha, int[] inputValue, double step_size)
+    public Hopfield_Network(int k, int n, double alpha, int[] input_vector, double step_size)
     {
     	this.converged = false;
         this.k = k;
         this.n = n;
         this.step_size = step_size;
         this.alpha = alpha;
-        this.input = inputValue;
+        this.input = input_vector;
         tau = 2 * alpha;
         margin = .01;
 
 
-        transition_table = new int[n][n];
         transition_table = new int[n][n];
         activation = new double[n];
         output = new double[n];
@@ -109,7 +112,7 @@ public class Hopfield_Network
      * Automatically applies the calculated weights to the transition_table class variable for
      * each connection from neuron i -> neuron j.
      *
-     * TODO: Allow for multiple categories of neurons, assigning -2 for each common category.
+     * TODO: Depreciated. Remove and allow for transition table pass-through from Main file.
      */
     private void gen_trans_table()
     {
@@ -128,7 +131,7 @@ public class Hopfield_Network
     /**
      * Generates the initial activation level for each neuron - calculated by taking (2kα/n)-α.
      *
-     * TODO: Add perturbation to these initial u-values.
+     * @param percent: Decimal value of percent allowed perturbation. E.g./ 0.03 for 3% perturbation.
      */
     private void init_activation(double percent)
     {

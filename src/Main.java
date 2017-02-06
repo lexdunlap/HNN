@@ -1,7 +1,10 @@
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Scanner;
 import java.util.stream.Stream;
@@ -24,16 +27,29 @@ public class Main {
 
     // TODO: Migrate to read_inputs and read_weights methods for automatic testing.
     // TODO: Add loop for automatic testing.
-	public Main(String ip) throws FileNotFoundException{
-		FileReader(ip, "i");
-		PrintMatrix("i");
-		System.out.print(input);
-		Hopfield_Network hn = new Hopfield_Network(1, nValue, 1, input, .1);
-		this.transition_table = hn.getTransitionTable();
-		PrintMatrix("e");
-		this.output = hn.getOuput();
-		PrintMatrix("o");
-		
+	public Main(String in_file, String weight_file,
+                int num_inputs, int num_neurons) throws FileNotFoundException{
+//		FileReader(ip, "i");
+//		PrintMatrix("i");
+//		System.out.print(input);
+        try {
+            int[][] inputs = read_inputs(in_file, num_inputs, num_neurons);
+            input = inputs[0];
+            PrintMatrix("i");
+
+            int[][][] weights = read_weights(weight_file, num_inputs, num_neurons);
+            transition_table = weights[0];
+            PrintMatrix("e");
+
+            System.out.print("Initialisation done. Beginning testing now.");
+            for (int i = 0; i < num_inputs; i++) {
+                Hopfield_Network hn = new Hopfield_Network(1, nValue, 1, inputs[i], weights[i], .1);
+                this.transition_table = hn.getTransitionTable();
+                PrintMatrix("e");
+                this.output = hn.getOuput();
+                PrintMatrix("o");
+            }
+        } catch (IOException e) {}
 	}
 	
 	public void FileReader(String fileName, String type) throws FileNotFoundException{
@@ -115,7 +131,7 @@ public class Main {
 		Scanner file = new Scanner(new File(filename));
         while (file.hasNextLine())
         {
-            inputs[lc] = Stream.of(file.nextLine()).mapToInt(Integer::parseInt).toArray();
+            inputs[lc] = Stream.of(file.nextLine().split("\\s+")).mapToInt(Integer::parseInt).toArray();
             lc++;
         }
         return inputs;
@@ -144,16 +160,23 @@ public class Main {
         int[][][] t_tables = new int[num_tables][in_len][in_len];
         int lc = 0, mxc = 0;
         Scanner file = new Scanner(new File(filename));
+        boolean valid = true;
 
-        while (file.hasNextLine())
+        while (file.hasNextLine() && valid)
         {
-            if (file.nextLine().length() == 0)
+            String[] line = file.nextLine().split("\\s");
+            if (line.length == 1)
             {
+                System.out.print("Here.");
                 lc = 0;
                 mxc++;
+                if (mxc > num_tables)
+                    valid = false;
+            } else {
+                System.out.print(Arrays.toString(line) + "\n");
+                t_tables[mxc][lc] = Stream.of(line).mapToInt(Integer::parseInt).toArray();
+                lc++;
             }
-            t_tables[mxc][lc] = Stream.of(file.nextLine()).mapToInt(Integer::parseInt).toArray();
-            lc++;
         }
 
         return t_tables;
@@ -196,7 +219,7 @@ public class Main {
 	}
 	public static void main(String[] args) throws FileNotFoundException {
 		// Create a new instance of the Main
-		new Main("inputs.csv");
+		new Main("inputs.csv", "weights.csv", 3, 10);
 
 	}
 

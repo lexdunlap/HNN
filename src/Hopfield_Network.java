@@ -31,7 +31,8 @@ public class Hopfield_Network
      * @param n total number of neurons
      * @param alpha activation threshold value for determining neuron response
      */
-    public Hopfield_Network(int k, int n, double alpha, int[] input_vector, double step_size)
+    public Hopfield_Network(int k, int n, double alpha, int[] input_vector,
+                            int[][] transition_table, double step_size)
     {
     	this.converged = false;
         this.k = k;
@@ -43,7 +44,8 @@ public class Hopfield_Network
         margin = .01;
 
 
-        transition_table = new int[n][n];
+//        transition_table = new int[n][n];
+        this.transition_table = transition_table;
         activation = new double[n];
         output = new double[n];
         prev_output = new double[n];
@@ -54,7 +56,7 @@ public class Hopfield_Network
             firing_order[i] = i;
         }
 
-        gen_trans_table();
+//        gen_trans_table();
         init_activation(.3);
         run();
     }
@@ -105,28 +107,30 @@ public class Hopfield_Network
         input = i_vector;
     }
 
-    /**
-     * Generates the transition table (weight matrix). Currently, assigns weights of -2 for each
-     * neuron pair, excluding self connections, which are instead assigned values of 0.
-     *
-     * Automatically applies the calculated weights to the transition_table class variable for
-     * each connection from neuron i -> neuron j.
-     *
-     * TODO: Depreciated. Remove and allow for transition table pass-through from Main file.
-     */
-    private void gen_trans_table()
-    {
-        for (int i = 0; i < n; i++)
-        {
-            for (int j = 0; j < n; j++)
-            {
-                if (i == j)
-                    transition_table[i][j] = 0;
-                else
-                    transition_table[i][j] -= 2;
-            }
-        }
-    }
+//    /**
+//     * DEPRECIATED.
+//     *
+//     * Generates the transition table (weight matrix). Currently, assigns weights of -2 for each
+//     * neuron pair, excluding self connections, which are instead assigned values of 0.
+//     *
+//     * Automatically applies the calculated weights to the transition_table class variable for
+//     * each connection from neuron i -> neuron j.
+//     *
+//     * TODO: Depreciated. Remove and allow for transition table pass-through from Main file.
+//     */
+//    private void gen_trans_table()
+//    {
+//        for (int i = 0; i < n; i++)
+//        {
+//            for (int j = 0; j < n; j++)
+//            {
+//                if (i == j)
+//                    transition_table[i][j] = 0;
+//                else
+//                    transition_table[i][j] -= 2;
+//            }
+//        }
+//    }
 
     /**
      * Generates the initial activation level for each neuron - calculated by taking (2kα/n)-α.

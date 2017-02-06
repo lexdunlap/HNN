@@ -34,16 +34,11 @@ public class Main {
 //		System.out.print(input);
         try {
             int[][] inputs = read_inputs(in_file, num_inputs, num_neurons);
-            input = inputs[0];
-            PrintMatrix("i");
-
             int[][][] weights = read_weights(weight_file, num_inputs, num_neurons);
-            transition_table = weights[0];
-            PrintMatrix("e");
 
             System.out.print("Initialisation done. Beginning testing now.");
             for (int i = 0; i < num_inputs; i++) {
-                Hopfield_Network hn = new Hopfield_Network(1, nValue, 1, inputs[i], weights[i], .1);
+                Hopfield_Network hn = new Hopfield_Network(1, num_neurons, 1, inputs[i], weights[i], .1);
                 this.transition_table = hn.getTransitionTable();
                 PrintMatrix("e");
                 this.output = hn.getOuput();
@@ -167,13 +162,11 @@ public class Main {
             String[] line = file.nextLine().split("\\s");
             if (line.length == 1)
             {
-                System.out.print("Here.");
                 lc = 0;
                 mxc++;
                 if (mxc > num_tables)
                     valid = false;
             } else {
-                System.out.print(Arrays.toString(line) + "\n");
                 t_tables[mxc][lc] = Stream.of(line).mapToInt(Integer::parseInt).toArray();
                 lc++;
             }

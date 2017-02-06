@@ -1,8 +1,10 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 /**
  * 
@@ -39,37 +41,37 @@ public class Main {
 		// creates variables for inputting data into an ArrayList
 		ArrayList<String> rowArrays = new ArrayList<String>();
 		String[] lineArray = null;
-		
+
 		// scanner reads in new file
 		Scanner newFile = new Scanner(new File(fileName));
-		
+
 		//counts each new line as a row and adds each complete row as an element to the ArrayList
 		while (newFile.hasNextLine()){
 			this.rows++;
 			String a = newFile.nextLine();
-			lineArray = a.split("\n");	
+			lineArray = a.split("\n");
 			Collections.addAll(rowArrays, lineArray);
 		}
-		
+
 		//determines the number of columns by splitting an element of the ArrayList into segments based on commas
 		for (int i = 0; i < 1; i++){
 			columns = lineArray[i].split("\\,", -1).length;
 		}
-		
+
 		if (type == "i"){
 			//initializes the external inputs with the read number of rows and columns
 			input = new int[rows];
-			
+
 			//srow and scol keep track of the current row and column being added to the external inputs
 			int srow = 0;
 			int scol = 0;
-			
+
 			//Loop to input values into external inputs
 			for (int i = 0; i < rowArrays.size(); i++){
 				//extract element of the ArrayList which holds rows of data and split them into an array that holds each element for the row
 				String row = rowArrays.get(i);
 				String[] columnArray = row.split(",");
-				
+
 				//For each element in the newly created array parse into an int and add to external inputs at the location [srow][scol]
 				for (int j = 0; j < columnArray.length; j++){
 					if (columnArray[j].length() > 0){
@@ -93,8 +95,70 @@ public class Main {
 		this.rows = 0;
 		this.columns = 0;
 		newFile.close();
-	
+
 	}
+
+    /**
+     * Allows for automatic testing. Given a file with each row representing a different
+     *  input vector, separates all given input vectors into a matrix with each component
+     *  row vector corresponding to a different input vector.
+     *
+     * @param filename: Name of file where the input vectors are stored.
+     * @param num_in: Number of total input vectors in the file.
+     * @param in_len: Length of each input vector in the file. NOTE: All vectors must be the same length.
+     * @return Returns matrix of input vectors.
+     * @throws IOException From Scanner/File class.
+     */
+	public int[][] read_inputs(String filename, int num_in, int in_len) throws IOException
+	{
+        int[][] inputs = new int[num_in][in_len];
+        int lc = 0;
+		Scanner file = new Scanner(new File(filename));
+        while (file.hasNextLine())
+        {
+            inputs[lc] = Stream.of(file.nextLine()).mapToInt(Integer::parseInt).toArray();
+            lc++;
+        }
+        return inputs;
+	}
+
+    /**
+     * Allows for automatic testing. Given a file of transition tables (weight matrices),
+     *  reads in each matrix row by row. Matrices are separated by blank lines. The 3D int
+     *  array used to store the collection of matrices is broken down as such:
+     *      1. int[] represents the chosen matrix. Think of the first layer of the array
+     *          as an index system for labeling the transition tables stored in the next
+     *          two layers of the array.
+     *      2. int[][] represents an entire row of the chosen transition table index.
+     *      3. int[][][] represents a column element of the aforementioned row vector
+     *          for the chosen matrix index.
+     *      E.g. [1][s][t] gives element [s][t] of the first [1] matrix.
+     *
+     * @param filename: Name of file where the transition tables are stored.
+     * @param num_tables: Number of complete transition tables in the file.
+     * @param in_len: Number of columns (or rows) in the transition table. NOTE: #col == #row
+     * @return Returns a 3D int array of transition tables.
+     * @throws IOException From Scanner/File class.
+     */
+	public int[][][] read_weights(String filename, int num_tables, int in_len) throws IOException
+    {
+        int[][][] t_tables = new int[num_tables][in_len][in_len];
+        int lc = 0, mxc = 0;
+        Scanner file = new Scanner(new File(filename));
+
+        while (file.hasNextLine())
+        {
+            if (file.nextLine().length() == 0)
+            {
+                lc = 0;
+                mxc++;
+            }
+            t_tables[mxc][lc] = Stream.of(file.nextLine()).mapToInt(Integer::parseInt).toArray();
+            lc++;
+        }
+
+        return t_tables;
+    }
 	
 	//method for printing the matrix to the console 
 	public void PrintMatrix(String type){

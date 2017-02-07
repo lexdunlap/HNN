@@ -95,6 +95,9 @@ public class Hopfield_Network
     public double[] getOuput(){
     	return output;
     }
+    public int getKValue(){
+    	return k;
+    }
 
     /**
      * Used for inputting an input vector into the inner input matrix of the

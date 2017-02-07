@@ -1,5 +1,6 @@
 import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
+import tester.OutputTest;
 import tester.Test;
 
 import java.io.File;
@@ -48,6 +49,10 @@ public class Main {
                 System.out.println(results);
                 PrintMatrix("e");
                 this.output = hn.getOuput();
+                int kNum = hn.getKValue();
+                OutputTest ot = new OutputTest(this.output, kNum);
+                String outputResults = ot.getOutputResults();
+                System.out.println(outputResults);
                 PrintMatrix("o");
             }
         } catch (IOException e) {}

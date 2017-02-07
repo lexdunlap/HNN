@@ -2,7 +2,7 @@ package tester;
 
 public class Test {
 	public String s;
-	
+		
 	public Test(int[][] t){
 		int rows = t.length;
 		int col = t[0].length;
@@ -28,7 +28,8 @@ public class Test {
 				}
 				else{
 					int current = t[i][j];
-					if ((current != 2) && (current != -2))
+					int remainder = current % 2;
+					if ((remainder != 0) || (current > 0))
 						incorrectValues++;
 				}
 			}
@@ -49,5 +50,5 @@ public class Test {
 	public String getResults(){
 		return s;
 	}
-
+	
 }

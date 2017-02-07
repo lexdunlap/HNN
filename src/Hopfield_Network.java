@@ -1,4 +1,6 @@
 import jdk.nashorn.internal.objects.annotations.Setter;
+
+import java.io.IOException;
 import java.lang.Math;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
@@ -15,6 +17,7 @@ public class Hopfield_Network
     private int[] input, firing_order;              // I-Vector
     private int[][] transition_table;               // T-Matrix
 
+    private Catalog catalog;
     private double alpha, tau, step_size, margin;   // Programmer-defined alpha value
     private double[] activation,                    // U-Vector
             output,                                 // V-Vector
@@ -30,10 +33,16 @@ public class Hopfield_Network
      * @param k number of selected neurons out of total n
      * @param n total number of neurons
      * @param alpha activation threshold value for determining neuron response
+     * @throws IOException 
      */
     public Hopfield_Network(int k, int n, double alpha, int[] input_vector,
-                            int[][] transition_table, double step_size)
+                            int[][] transition_table, double step_size) throws IOException
     {
+    	//create an object for catalog creation
+    	this.catalog = new Catalog();
+    	catalog.setInputs(input_vector);
+    	catalog.setTMatrix(transition_table);
+    	
     	this.converged = false;
         this.k = k;
         this.n = n;
@@ -58,16 +67,22 @@ public class Hopfield_Network
 
 //        gen_trans_table();
         init_activation(.3);
+              
         run();
+        catalog.closeFileWriter();
     }
 
     /**
      * Continually updates and calculates the activation of all neurons until convergence is reached.
+     * @throws IOException 
      */
-    public void run()
+    public void run() throws IOException
     {
+    	// grab during test output array
+        catalog.setDuringTest(output);
+        
         while (!converged)
-        {
+        {        	         
             int convergence_count = 0;
             firing_order = shuffle(firing_order);
 
@@ -87,6 +102,9 @@ public class Hopfield_Network
                 prev_output[index] = output[index];
             }
         }
+      //grab end of test output array and print to file
+        catalog.setPostTest(output);
+        catalog.printToFile();
     }
     public int[][] getTransitionTable(){
     	return transition_table;

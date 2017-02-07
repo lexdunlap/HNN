@@ -29,7 +29,7 @@ public class Test {
 				else{
 					int current = t[i][j];
 					int remainder = current % 2;
-					if ((remainder != 0) || (current > 0))
+					if ((remainder != 0) || (current >= 0))
 						incorrectValues++;
 				}
 			}

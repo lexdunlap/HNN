@@ -42,6 +42,7 @@ public class Main {
             System.out.print("Initialisation done. Beginning testing now.\n");
             
             for (int i = 0; i < num_inputs; i++) {
+				int[] k = {2,4};
                 Hopfield_Network hn = new Hopfield_Network(1, num_neurons, 1, inputs[i], weights[i], .1);
                 this.transition_table = hn.getTransitionTable();
                 Test r = new Test(this.transition_table);
@@ -170,7 +171,7 @@ public class Main {
 
         while (file.hasNextLine() && valid)
         {
-            String[] line = file.nextLine().split("\\s");
+            String[] line = file.nextLine().split("\\s+");
             if (line.length == 1)
             {
                 lc = 0;

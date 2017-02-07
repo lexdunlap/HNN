@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Hopfield_Network
 {
     private boolean converged;                      // Flips when the network converges to a stable energy level
-    private int k, n;                               // k-neurons out of n total neurons
+    private int k, n;                                  // k-neurons out of n total neurons
     private int[] input, firing_order;              // I-Vector
     private int[][] transition_table;               // T-Matrix
 
@@ -61,16 +61,24 @@ public class Hopfield_Network
         run();
     }
 
+//    private int[] set_inputs(int[] in)
+//    {
+//        for (int i = 0; i < in.length; i++)
+//            input[i] = (2 * k[in[i]]) - 1;
+//    }
+
     /**
      * Continually updates and calculates the activation of all neurons until convergence is reached.
      */
     public void run()
     {
+//        int[] convergence_count = new int[k];
         int convergence_count;
         boolean digital_states, converged = false;
 
         while (!converged)
         {
+//            for (int i = 0; i < k; i++) convergence_count[i] = 0;
             convergence_count = 0;
             digital_states = true;
             firing_order = shuffle(firing_order);
@@ -87,12 +95,10 @@ public class Hopfield_Network
                 if ((output[index] * (1 - output[index])) >= margin)
                     digital_states = false;
 
-                System.out.print(digital_states);
                 prev_output[index] = output[index];
             }
 
-            if ((convergence_count >= k) && digital_states)
-            {
+            if ((convergence_count >= k) && digital_states) {
                 converged = true;
             }
         }

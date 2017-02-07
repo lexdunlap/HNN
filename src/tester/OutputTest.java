@@ -11,7 +11,7 @@ public class OutputTest {
 	public String outputResponse;
 	
 	public OutputTest(double[] v, int kNum){
-		outputResponse = testOutput(v, kNum); 
+		outputResponse = testOutput(v, kNum, 0.01);
 	}
 	
 	
@@ -19,16 +19,16 @@ public class OutputTest {
 		return outputResponse;
 	}
 	
-	public String testOutput(double[] output, int k){
+	public String testOutput(double[] output, int k, double epsilon){
 		int nonDigitalNumber = 0;
 		int kNumber = 0;
 		int kActual = k;
 		
 		for(int i = 0; i < output.length; i++){
-			if ((output[i] != 1) && (output[i] != 0)){
+			if ((output[i] <= 1 - epsilon) && (output[i] >= 0 + epsilon)){
 				nonDigitalNumber++;
 			}
-			if(output[i] == 1){
+			if(output[i] >= 1 - epsilon){
 				kNumber++;
 			}
 		}

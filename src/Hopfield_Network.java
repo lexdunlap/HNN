@@ -1,6 +1,4 @@
 import jdk.nashorn.internal.objects.annotations.Setter;
-
-import java.io.IOException;
 import java.lang.Math;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
@@ -17,7 +15,6 @@ public class Hopfield_Network
     private int[] input, firing_order;              // I-Vector
     private int[][] transition_table;               // T-Matrix
 
-    private Catalog catalog;
     private double alpha, tau, step_size, margin;   // Programmer-defined alpha value
     private double[] activation,                    // U-Vector
             output,                                 // V-Vector
@@ -33,17 +30,11 @@ public class Hopfield_Network
      * @param k number of selected neurons out of total n
      * @param n total number of neurons
      * @param alpha activation threshold value for determining neuron response
-     * @throws IOException 
      */
     public Hopfield_Network(int k, int n, double alpha, int[] input_vector,
-                            int[][] transition_table, double step_size) throws IOException
+                            int[][] transition_table, double step_size)
     {
-    	//create an object for catalog creation
-    	this.catalog = new Catalog();
-    	catalog.setInputs(input_vector);
-    	catalog.setTMatrix(transition_table);
-    	
-    	this.converged = false;
+//    	this.converged = false;
         this.k = k;
         this.n = n;
         this.step_size = step_size;
@@ -67,23 +58,21 @@ public class Hopfield_Network
 
 //        gen_trans_table();
         init_activation(.3);
-              
         run();
-        catalog.closeFileWriter();
     }
 
     /**
      * Continually updates and calculates the activation of all neurons until convergence is reached.
-     * @throws IOException 
      */
-    public void run() throws IOException
+    public void run()
     {
-    	// grab during test output array
-        catalog.setDuringTest(output);
-        
+        int convergence_count;
+        boolean digital_states, converged = false;
+
         while (!converged)
-        {        	         
-            int convergence_count = 0;
+        {
+            convergence_count = 0;
+            digital_states = true;
             firing_order = shuffle(firing_order);
 
             for(int i = 0; i < n; i++) {
@@ -91,20 +80,22 @@ public class Hopfield_Network
                 update_neuron(index);
                 neuron_activation(index);
 
-                if ((output[index] == prev_output[index]) &&
-                        ((output[index] * (1 - output[index])) <= margin)) {
+                // TODO: This goes somewhere else or needs to be broken up.
+                if (output[index] == prev_output[index])
                     convergence_count++;
-                }
-                if (convergence_count >= k)
-                {
-                    converged = true;
-                }
+
+                if ((output[index] * (1 - output[index])) >= margin)
+                    digital_states = false;
+
+                System.out.print(digital_states);
                 prev_output[index] = output[index];
             }
+
+            if ((convergence_count >= k) && digital_states)
+            {
+                converged = true;
+            }
         }
-      //grab end of test output array and print to file
-        catalog.setPostTest(output);
-        catalog.printToFile();
     }
     public int[][] getTransitionTable(){
     	return transition_table;
@@ -113,6 +104,7 @@ public class Hopfield_Network
     public double[] getOuput(){
     	return output;
     }
+
     public int getKValue(){
     	return k;
     }

@@ -1,4 +1,6 @@
 import jdk.nashorn.internal.objects.annotations.Setter;
+
+import java.io.IOException;
 import java.lang.Math;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
@@ -15,6 +17,7 @@ public class Hopfield_Network
     private int[] input, firing_order;              // I-Vector
     private int[][] transition_table;               // T-Matrix
 
+    private Catalog catalog;
     private double alpha, tau, step_size, margin;   // Programmer-defined alpha value
     private double[] activation,                    // U-Vector
             output,                                 // V-Vector
@@ -30,10 +33,16 @@ public class Hopfield_Network
      * @param k number of selected neurons out of total n
      * @param n total number of neurons
      * @param alpha activation threshold value for determining neuron response
+     * @throws IOException 
      */
     public Hopfield_Network(int k, int n, double alpha, int[] input_vector,
-                            int[][] transition_table, double step_size)
+                            int[][] transition_table, double step_size) throws IOException
     {
+    	// assigning values to the catalog
+    	catalog = new Catalog();
+    	catalog.setInputs(input_vector);
+    	catalog.setTMatrix(transition_table);
+    	
 //    	this.converged = false;
         this.k = k;
         this.n = n;
@@ -59,6 +68,10 @@ public class Hopfield_Network
 //        gen_trans_table();
         init_activation(.3);
         run();
+        
+        //print to catalog and close
+        catalog.printToFile();
+        catalog.closeFileWriter();
     }
 
 //    private int[] set_inputs(int[] in)
@@ -75,6 +88,7 @@ public class Hopfield_Network
 //        int[] convergence_count = new int[k];
         int convergence_count;
         boolean digital_states, converged = false;
+        catalog.setDuringTest(this.output);
 
         while (!converged)
         {
@@ -102,6 +116,7 @@ public class Hopfield_Network
                 converged = true;
             }
         }
+        catalog.setPostTest(this.getOuput());
     }
     public int[][] getTransitionTable(){
     	return transition_table;

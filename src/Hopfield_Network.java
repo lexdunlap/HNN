@@ -10,15 +10,22 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class Hopfield_Network
 {
-    private boolean converged;                      // Flips when the network converges to a stable energy level
-    private int k, n;                                  // k-neurons out of n total neurons
-    private int[] input, firing_order;              // I-Vector
-    private int[][] transition_table;               // T-Matrix
+    private boolean converged;              // Flips when the network converges to a stable energy level
+    private int n;                          // k-neurons out of n total neurons
 
-    private double alpha, tau, step_size, margin;   // Programmer-defined alpha value
-    private double[] activation,                    // U-Vector
-            output,                                 // V-Vector
-            prev_output;                            // V(t-1)-Vector
+    private int[] k,                        // k-out-of-n. k-neurons out of n total neurons
+            category,                       // Keeps track of category for a given neuron
+            input,                          // I-Vector
+            firing_order;                   // Shuffled to randomise order neurons are fired in
+    private int[][] transition_table;       // T-Matrix
+
+    private double alpha,                   // Programmer-defined alpha value
+            tau,                            // Programmer-defined tau value
+            step_size,                      // Integration step size used in activation function
+            margin;                         // Decimal-percent value for allowed deviation from binary convergence states
+    private double[] activation,            // U-Vector
+            output,                         // V-Vector
+            prev_output;                    // V(t-1)-Vector
 
     /**
      * Creates Hopfield Network, setting all initial programmer-defined values. Also generates
@@ -30,22 +37,26 @@ public class Hopfield_Network
      * @param k number of selected neurons out of total n
      * @param n total number of neurons
      * @param alpha activation threshold value for determining neuron response
+     * @param input_vector
+     * @param transition_table
+     * @param step_size
+     * @param category vector telling the category of each neuron - should be of length 'n'
      */
-    public Hopfield_Network(int k, int n, double alpha, int[] input_vector,
-                            int[][] transition_table, double step_size)
+    public Hopfield_Network(int[] k, int n, double alpha, int[] input_vector,
+                            int[][] transition_table, double step_size, int[] category)
     {
 //    	this.converged = false;
         this.k = k;
         this.n = n;
         this.step_size = step_size;
         this.alpha = alpha;
-        this.input = input_vector;
         tau = 2 * alpha;
         margin = .01;
-
+        this.transition_table = transition_table;
+        this.category = category;
 
 //        transition_table = new int[n][n];
-        this.transition_table = transition_table;
+        input = new int[n];
         activation = new double[n];
         output = new double[n];
         prev_output = new double[n];
@@ -56,41 +67,63 @@ public class Hopfield_Network
             firing_order[i] = i;
         }
 
-//        gen_trans_table();
+        set_inputs(input_vector);
         init_activation(.3);
         run();
     }
 
-//    private int[] set_inputs(int[] in)
-//    {
-//        for (int i = 0; i < in.length; i++)
-//            input[i] = (2 * k[in[i]]) - 1;
-//    }
+    /**
+     * Constructor for creating a single-set network.
+     *
+     * @param k
+     * @param n
+     * @param alpha
+     * @param input_vector
+     * @param transition_table
+     * @param step_size
+     */
+    public Hopfield_Network(int k, int n, double alpha, int[] input_vector,
+                            int[][] transition_table, double step_size)
+    {
+    }
+
+    /**
+     * TODO: Documentation!
+     *
+     * @param in
+     */
+    private void set_inputs(int[] in)
+    {
+        for (int i = 0; i < in.length; i++)
+            input[i] = (2 * k[in[i]]) - 1;
+    }
 
     /**
      * Continually updates and calculates the activation of all neurons until convergence is reached.
      */
     public void run()
     {
-//        int[] convergence_count = new int[k];
-        int convergence_count;
-        boolean digital_states, converged = false;
+        int[] convergence_count = new int[k.length];
+        boolean[] converged = new boolean[k.length];
+        boolean digital_states, finished = false;
 
-        while (!converged)
+        for (int i = 0; i < k.length; i++)
+            converged[i] = false;
+
+        while (!finished)
         {
-//            for (int i = 0; i < k; i++) convergence_count[i] = 0;
-            convergence_count = 0;
             digital_states = true;
             firing_order = shuffle(firing_order);
+            for (int i = 0; i < convergence_count.length; i++)
+                convergence_count[i] = 0;
 
             for(int i = 0; i < n; i++) {
                 int index = firing_order[i];
                 update_neuron(index);
                 neuron_activation(index);
 
-                // TODO: This goes somewhere else or needs to be broken up.
                 if (output[index] == prev_output[index])
-                    convergence_count++;
+                    convergence_count[category[i]]++;
 
                 if ((output[index] * (1 - output[index])) >= margin)
                     digital_states = false;
@@ -98,20 +131,35 @@ public class Hopfield_Network
                 prev_output[index] = output[index];
             }
 
-            if ((convergence_count >= k) && digital_states) {
-                converged = true;
-            }
+            for (int i = 0; i < k.length; i++)
+                converged[i] = ((convergence_count[i] >= k[i]) && digital_states);
+            finished = check_all_bool(converged);
         }
     }
-    public int[][] getTransitionTable(){
+
+    /**
+     * Checks all boolean values in an array. Returns false on the first false element found. Returns true
+     *    if all elements are true in the entire array.
+     *
+     * @param bool_array Array of boolean values to check.
+     * @return true if all values are true; false if any values are false
+     */
+    private boolean check_all_bool(boolean[] bool_array)
+    {
+        for (boolean value : bool_array)
+            if (!value) return false;
+        return true;
+    }
+
+    public int[][] getTransitionTable() {
     	return transition_table;
     }
     
-    public double[] getOuput(){
+    public double[] getOuput() {
     	return output;
     }
 
-    public int getKValue(){
+    public int[] getKValue() {
     	return k;
     }
 
@@ -123,7 +171,7 @@ public class Hopfield_Network
      */
     @Setter public void load_inputs(int[] i_vector)
     {
-        input = i_vector;
+        set_inputs(i_vector);
     }
 
 //    /**
@@ -162,7 +210,7 @@ public class Hopfield_Network
         for (int i = 0; i < n; i++)
         {
             rand = ThreadLocalRandom.current().nextDouble(1 - percent, 1 + percent);
-            activation[i] = rand * ((2 * alpha) * (k / n) - alpha);
+            activation[i] = rand * ((2 * alpha) * (k[category[i]] / n) - alpha);
         }
     }
 

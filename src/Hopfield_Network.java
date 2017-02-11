@@ -1,6 +1,4 @@
-import jdk.nashorn.internal.objects.annotations.Setter;
 import java.lang.Math;
-import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -10,7 +8,6 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class Hopfield_Network
 {
-    private boolean converged;              // Flips when the network converges to a stable energy level
     private int n;                          // k-neurons out of n total neurons
 
     private int[] k,                        // k-out-of-n. k-neurons out of n total neurons
@@ -22,7 +19,7 @@ public class Hopfield_Network
     private double alpha,                   // Programmer-defined alpha value
             tau,                            // Programmer-defined tau value
             step_size,                      // Integration step size used in activation function
-            margin;                         // Decimal-percent value for allowed deviation from binary convergence states
+            epsilon;                         // Decimal-percent value for allowed deviation from binary convergence states
     private double[] activation,            // U-Vector
             output,                         // V-Vector
             prev_output;                    // V(t-1)-Vector
@@ -32,7 +29,7 @@ public class Hopfield_Network
      * the transition table weight matrix based on neuron connections, as well as generating
      * the initial values for the activation vector (u-vector).
      *
-     * TODO: Add int[][] transition_table pass-through from Main file.
+     * TODO: Is an input vector I even necessary (since I is just represented by 2k-1)? Confusion.
      *
      * @param k number of selected neurons out of total n
      * @param n total number of neurons
@@ -42,20 +39,18 @@ public class Hopfield_Network
      * @param step_size
      * @param category vector telling the category of each neuron - should be of length 'n'
      */
-    public Hopfield_Network(int[] k, int n, double alpha, int[] input_vector,
+    public Hopfield_Network(int[] k, int n, double alpha, double epsilon, int[] input_vector,
                             int[][] transition_table, double step_size, int[] category)
     {
-//    	this.converged = false;
         this.k = k;
         this.n = n;
         this.step_size = step_size;
         this.alpha = alpha;
         tau = 2 * alpha;
-        margin = .01;
+        this.epsilon = epsilon;
         this.transition_table = transition_table;
         this.category = category;
 
-//        transition_table = new int[n][n];
         input = new int[n];
         activation = new double[n];
         output = new double[n];
@@ -75,6 +70,8 @@ public class Hopfield_Network
     /**
      * Constructor for creating a single-set network.
      *
+     * TODO: Combine overlapping code from constructors and split constructors at a more efficient breakpoint.
+     *
      * @param k
      * @param n
      * @param alpha
@@ -82,9 +79,31 @@ public class Hopfield_Network
      * @param transition_table
      * @param step_size
      */
-    public Hopfield_Network(int k, int n, double alpha, int[] input_vector,
+    public Hopfield_Network(int k, int n, double alpha, double epsilon, int[] input_vector,
                             int[][] transition_table, double step_size)
     {
+        this.k = new int[]{k};
+        this.n = n;
+        this.step_size = step_size;
+        this.alpha = alpha;
+        this.input = input_vector;
+        tau = 2 * alpha;
+        this.epsilon = epsilon;
+
+        this.transition_table = transition_table;
+        activation = new double[n];
+        output = new double[n];
+        prev_output = new double[n];
+        firing_order = new int[n];
+
+        for (int i = 0; i < n; i++)
+        {
+            firing_order[i] = i;
+        }
+
+        set_inputs(input_vector);
+        init_activation(.3);
+        run();
     }
 
     /**
@@ -114,6 +133,7 @@ public class Hopfield_Network
         {
             digital_states = true;
             firing_order = shuffle(firing_order);
+
             for (int i = 0; i < convergence_count.length; i++)
                 convergence_count[i] = 0;
 
@@ -125,14 +145,16 @@ public class Hopfield_Network
                 if (output[index] == prev_output[index])
                     convergence_count[category[i]]++;
 
-                if ((output[index] * (1 - output[index])) >= margin)
+                if ((output[index] * (1 - output[index])) >= epsilon)
                     digital_states = false;
 
                 prev_output[index] = output[index];
             }
 
+            // TODO: Set convergence_count[i] == k[i] BUT currently this breaks convergence and makes it run forever.
             for (int i = 0; i < k.length; i++)
-                converged[i] = ((convergence_count[i] >= k[i]) && digital_states);
+                converged[i] = ((convergence_count[i] == k[i]) && digital_states);
+
             finished = check_all_bool(converged);
         }
     }
@@ -169,7 +191,7 @@ public class Hopfield_Network
      *
      * @param i_vector row vector of input values.
      */
-    @Setter public void load_inputs(int[] i_vector)
+    public void load_inputs(int[] i_vector)
     {
         set_inputs(i_vector);
     }

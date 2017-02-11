@@ -40,14 +40,14 @@ public class Main {
             int[][][] weights = read_weights(weight_file, num_inputs, num_neurons);
 
             System.out.print("Initialisation done. Beginning testing now.\n");
-            
+			int[] k = {2,4};
+			int[] categories = {0, 1, 1, 0, 0, 0, 1, 1, 1, 0};
+
             for (int i = 0; i < num_inputs; i++) {
 				/*
 					TODO: Pull k/categories from a file. Alternatively, generate categories based on weight matrix.
 				 */
-				int[] k = {2,4};
-				int[] categories = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-                Hopfield_Network hn = new Hopfield_Network(k, num_neurons, 1, inputs[i], weights[i], .1, categories);
+                Hopfield_Network hn = new Hopfield_Network(k, num_neurons, 1, .01, inputs[i], weights[i], .1, categories);
                 this.transition_table = hn.getTransitionTable();
                 Test r = new Test(this.transition_table);
                 String results = r.getResults();
@@ -55,7 +55,7 @@ public class Main {
                 PrintMatrix("e");
                 this.output = hn.getOuput();
                 int[] kNum = hn.getKValue();
-                OutputTest ot = new OutputTest(this.output, kNum);
+                OutputTest ot = new OutputTest(this.output, kNum, categories);
                 String outputResults = ot.getOutputResults();
                 System.out.println(outputResults);
                 PrintMatrix("o");

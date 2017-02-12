@@ -24,6 +24,8 @@ public class Hopfield_Network
             output,                         // V-Vector
             prev_output;                    // V(t-1)-Vector
 
+    private Catalog catalog;
+
     /**
      * Creates Hopfield Network, setting all initial programmer-defined values. Also generates
      * the transition table weight matrix based on neuron connections, as well as generating
@@ -40,8 +42,12 @@ public class Hopfield_Network
      * @param category vector telling the category of each neuron - should be of length 'n'
      */
     public Hopfield_Network(int[] k, int n, double alpha, double epsilon, int[] input_vector,
-                            int[][] transition_table, double step_size, int[] category)
+                            int[][] transition_table, double step_size, int[] category) throws java.io.IOException
     {
+        catalog = new Catalog();
+        catalog.setInputs(input_vector);
+        catalog.setTMatrix(transition_table);
+
         this.k = k;
         this.n = n;
         this.step_size = step_size;
@@ -65,6 +71,10 @@ public class Hopfield_Network
         set_inputs(input_vector);
         init_activation(.3);
         run();
+
+        //print to catalog and close
+        catalog.printToFile();
+        catalog.closeFileWriter();
     }
 
     /**
@@ -125,6 +135,7 @@ public class Hopfield_Network
         int[] convergence_count = new int[k.length];
         boolean[] converged = new boolean[k.length];
         boolean digital_states, finished = false;
+        catalog.setDuringTest(this.output);
 
         for (int i = 0; i < k.length; i++)
             converged[i] = false;
@@ -153,10 +164,11 @@ public class Hopfield_Network
 
             // TODO: Set convergence_count[i] == k[i] BUT currently this breaks convergence and makes it run forever.
             for (int i = 0; i < k.length; i++)
-                converged[i] = ((convergence_count[i] == k[i]) && digital_states);
+                converged[i] = ((convergence_count[i] >= k[i]) && digital_states);
 
             finished = check_all_bool(converged);
         }
+        catalog.setPostTest(this.getOuput());
     }
 
     /**

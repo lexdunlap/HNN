@@ -32,33 +32,34 @@ public class Main {
     // TODO: Add loop for automatic testing.
 	public Main(String in_file, String weight_file,
                 int num_inputs, int num_neurons) throws FileNotFoundException{
-//		FileReader(ip, "i");
-//		PrintMatrix("i");
-//		System.out.print(input);
         try {
             int[][] inputs = read_inputs(in_file, num_inputs, num_neurons);
             int[][][] weights = read_weights(weight_file, num_inputs, num_neurons);
 
             System.out.print("Initialisation done. Beginning testing now.\n");
-            
+			int[] k = {2,4};
+			int[] categories = {0, 1, 1, 0, 0, 0, 1, 1, 1, 0};
+
             for (int i = 0; i < num_inputs; i++) {
-				int[] k = {2,4};
-                Hopfield_Network hn = new Hopfield_Network(1, num_neurons, 1, inputs[i], weights[i], .1);
+				/*
+					TODO: Pull k/categories from a file. Alternatively, generate categories based on weight matrix.
+				 */
+                Hopfield_Network hn = new Hopfield_Network(k, num_neurons, 1, .01, inputs[i], weights[i], .1, categories);
                 this.transition_table = hn.getTransitionTable();
                 Test r = new Test(this.transition_table);
                 String results = r.getResults();
                 System.out.println(results);
                 PrintMatrix("e");
                 this.output = hn.getOuput();
-                int kNum = hn.getKValue();
-                OutputTest ot = new OutputTest(this.output, kNum);
+                int[] kNum = hn.getKValue();
+                OutputTest ot = new OutputTest(this.output, kNum, categories);
                 String outputResults = ot.getOutputResults();
                 System.out.println(outputResults);
                 PrintMatrix("o");
             }
         } catch (IOException e) {}
 	}
-	
+
 	public void FileReader(String fileName, String type) throws FileNotFoundException{
 		// creates variables for inputting data into an ArrayList
 		ArrayList<String> rowArrays = new ArrayList<String>();
@@ -118,6 +119,15 @@ public class Main {
 		this.columns = 0;
 		newFile.close();
 
+	}
+
+	/**
+	 * Generates the categories of each neuron based on the given weight matrix.
+	 *
+	 * @param tt Weight matrix (transition table) to create categories from.
+	 */
+	public void gen_categories(int[][] tt)
+	{
 	}
 
     /**

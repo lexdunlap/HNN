@@ -32,9 +32,6 @@ public class Main {
     // TODO: Add loop for automatic testing.
 	public Main(String in_file, String weight_file,
                 int num_inputs, int num_neurons) throws FileNotFoundException{
-//		FileReader(ip, "i");
-//		PrintMatrix("i");
-//		System.out.print(input);
         try {
             int[][] inputs = read_inputs(in_file, num_inputs, num_neurons);
             int[][][] weights = read_weights(weight_file, num_inputs, num_neurons);
@@ -127,9 +124,9 @@ public class Main {
 	/**
 	 * Generates the categories of each neuron based on the given weight matrix.
 	 *
-	 * @param mx Weight matrix (transition table) to create categories from.
+	 * @param tt Weight matrix (transition table) to create categories from.
 	 */
-	public void gen_categories(int[][] mx)
+	public void gen_categories(int[][] tt)
 	{
 	}
 

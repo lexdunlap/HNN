@@ -1,29 +1,30 @@
 import java.lang.Math;
+import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Hopfield Network class.
  *
+ * @author Michael J. Suggs
+ * @version
+ * @since SDK1.8
  * TODO: Fill out javadocs.
  */
-public class Hopfield_Network
+public class HopfieldNetwork
 {
     private int n;                          // k-neurons out of n total neurons
-
-    private int[] k,                        // k-out-of-n. k-neurons out of n total neurons
-            category,                       // Keeps track of category for a given neuron
-            input,                          // I-Vector
-            firing_order;                   // Shuffled to randomise order neurons are fired in
+    private double alpha;                   // Programmer-defined alpha value
+    private double tau;                     // Programmer-defined tau value
+    private double step_size;               // Integration step size used in activation function
+    private double epsilon;                 // Decimal-percent value for allowed deviation from binary convergence states
+    private int[] input;                    // I-Vector
+    private int[] firing_order;             // Shuffled to randomise order neurons are fired in
     private int[][] transition_table;       // T-Matrix
-
-    private double alpha,                   // Programmer-defined alpha value
-            tau,                            // Programmer-defined tau value
-            step_size,                      // Integration step size used in activation function
-            epsilon;                         // Decimal-percent value for allowed deviation from binary convergence states
-    private double[] activation,            // U-Vector
-            output,                         // V-Vector
-            prev_output;                    // V(t-1)-Vector
-
+    private double[] activation;            // U-Vector
+    private double[] output;                // V-Vector
+    private double[] prev_output;           // V(t-1)-Vector
+    private ArrayList<ArrayList> category;  // Keeps track of category for a given neuron
+    private ArrayList<Integer> k;           // k-out-of-n. k-neurons out of n total neurons
     private Catalog catalog;
 
     /**
@@ -41,8 +42,8 @@ public class Hopfield_Network
      * @param step_size
      * @param category vector telling the category of each neuron - should be of length 'n'
      */
-    public Hopfield_Network(int[] k, int n, double alpha, double epsilon, int[] input_vector,
-                            int[][] transition_table, double step_size, int[] category) throws java.io.IOException
+    public HopfieldNetwork(ArrayList<Integer> k, int n, double alpha, double epsilon, int[] input_vector,
+                           int[][] transition_table, double step_size, ArrayList<ArrayList> category) throws java.io.IOException
     {
         catalog = new Catalog();
         catalog.setInputs(input_vector);
@@ -89,10 +90,10 @@ public class Hopfield_Network
      * @param transition_table
      * @param step_size
      */
-    public Hopfield_Network(int k, int n, double alpha, double epsilon, int[] input_vector,
-                            int[][] transition_table, double step_size)
+    public HopfieldNetwork(ArrayList<Integer> k, int n, double alpha, double epsilon,
+                           int[] input_vector, int[][] transition_table, double step_size)
     {
-        this.k = new int[]{k};
+        this.k = k;
         this.n = n;
         this.step_size = step_size;
         this.alpha = alpha;
@@ -124,7 +125,7 @@ public class Hopfield_Network
     private void set_inputs(int[] in)
     {
         for (int i = 0; i < in.length; i++)
-            input[i] = (2 * k[in[i]]) - 1;
+            input[i] = (2 * k.get(in[i])) - 1;
     }
 
     /**
@@ -132,12 +133,12 @@ public class Hopfield_Network
      */
     public void run()
     {
-        int[] convergence_count = new int[k.length];
-        boolean[] converged = new boolean[k.length];
+        int[] convergence_count = new int[k.size()];
+        boolean[] converged = new boolean[k.size()];
         boolean digital_states, finished = false;
         catalog.setDuringTest(this.output);
 
-        for (int i = 0; i < k.length; i++)
+        for (int i = 0; i < k.size(); i++)
             converged[i] = false;
 
         while (!finished)
@@ -153,8 +154,11 @@ public class Hopfield_Network
                 update_neuron(index);
                 neuron_activation(index);
 
-                if (output[index] == prev_output[index])
-                    convergence_count[category[i]]++;
+                if (output[index] == prev_output[index]) {
+                    for (int j = 0; j < category.get(i).size(); j++) {
+                        convergence_count[(int) category.get(i).get(j)]++;
+                    }
+                }
 
                 if ((output[index] * (1 - output[index])) >= epsilon)
                     digital_states = false;
@@ -163,8 +167,8 @@ public class Hopfield_Network
             }
 
             // TODO: Set convergence_count[i] == k[i] BUT currently this breaks convergence and makes it run forever.
-            for (int i = 0; i < k.length; i++)
-                converged[i] = ((convergence_count[i] >= k[i]) && digital_states);
+            for (int i = 0; i < k.size(); i++)
+                converged[i] = ((convergence_count[i] >= k.get(i)) && digital_states);
 
             finished = check_all_bool(converged);
         }
@@ -193,7 +197,7 @@ public class Hopfield_Network
     	return output;
     }
 
-    public int[] getKValue() {
+    public ArrayList<Integer> getKValue() {
     	return k;
     }
 
@@ -208,31 +212,6 @@ public class Hopfield_Network
         set_inputs(i_vector);
     }
 
-//    /**
-//     * DEPRECIATED.
-//     *
-//     * Generates the transition table (weight matrix). Currently, assigns weights of -2 for each
-//     * neuron pair, excluding self connections, which are instead assigned values of 0.
-//     *
-//     * Automatically applies the calculated weights to the transition_table class variable for
-//     * each connection from neuron i -> neuron j.
-//     *
-//     * TODO: Depreciated. Remove and allow for transition table pass-through from Main file.
-//     */
-//    private void gen_trans_table()
-//    {
-//        for (int i = 0; i < n; i++)
-//        {
-//            for (int j = 0; j < n; j++)
-//            {
-//                if (i == j)
-//                    transition_table[i][j] = 0;
-//                else
-//                    transition_table[i][j] -= 2;
-//            }
-//        }
-//    }
-
     /**
      * Generates the initial activation level for each neuron - calculated by taking (2kα/n)-α.
      *
@@ -241,10 +220,17 @@ public class Hopfield_Network
     private void init_activation(double percent)
     {
         double rand;
+        int sum;
         for (int i = 0; i < n; i++)
         {
+            sum = 0;
             rand = ThreadLocalRandom.current().nextDouble(1 - percent, 1 + percent);
-            activation[i] = rand * ((2 * alpha) * (k[category[i]] / n) - alpha);
+            // TODO how to handle the initial activation for multiple sets?! Ahhh!
+            for (int j = 0; j < category.get(j).size(); j++)
+            {
+                sum += rand * ((2 * alpha) * (k.get((int) category.get(i).get(j)) / n) - alpha);
+            }
+            activation[i] = sum;
         }
     }
 
@@ -306,4 +292,29 @@ public class Hopfield_Network
 
         return array;
     }
+
+//    /**
+//     * @depreciated
+//     *
+//     * Generates the transition table (weight matrix). Currently, assigns weights of -2 for each
+//     * neuron pair, excluding self connections, which are instead assigned values of 0.
+//     *
+//     * Automatically applies the calculated weights to the transition_table class variable for
+//     * each connection from neuron i -> neuron j.
+//     *
+//     * TODO: Depreciated. Remove and allow for transition table pass-through from Main file.
+//     */
+//    private void gen_trans_table()
+//    {
+//        for (int i = 0; i < n; i++)
+//        {
+//            for (int j = 0; j < n; j++)
+//            {
+//                if (i == j)
+//                    transition_table[i][j] = 0;
+//                else
+//                    transition_table[i][j] -= 2;
+//            }
+//        }
+//    }
 }

@@ -1,5 +1,6 @@
 import java.lang.Math;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -71,7 +72,10 @@ public class HopfieldNetwork
 
         set_inputs(input_vector);
         init_activation(.3);
+        System.out.println("Running:");
         run();
+        System.out.println("Printing outputs:");
+        System.out.println(Arrays.toString(output));
 
         //print to catalog and close
         catalog.printToFile();
@@ -159,7 +163,7 @@ public class HopfieldNetwork
                         convergence_count[(int) category.get(i).get(j)]++;
                     }
                 }
-
+                System.out.println(Arrays.toString(convergence_count));
                 if ((output[index] * (1 - output[index])) >= epsilon)
                     digital_states = false;
 
@@ -168,7 +172,7 @@ public class HopfieldNetwork
 
             // TODO: Set convergence_count[i] == k[i] BUT currently this breaks convergence and makes it run forever.
             for (int i = 0; i < k.size(); i++)
-                converged[i] = ((convergence_count[i] >= k.get(i)) && digital_states);
+                converged[i] = ((convergence_count[i] == k.get(i)) && digital_states);
 
             finished = check_all_bool(converged);
         }

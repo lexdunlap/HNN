@@ -18,6 +18,7 @@ public class Main {
     private int columns = 0;            // instantiate rows columns and T Matrix variables
 	private int numNeurons;             // Number of total neurons the network will have
 	private int numVectors;             // Number of input vectors in total - each network iteration utilises one vector
+    private int numCat;
     private double[] output;
     private int[][] transition_table;   // Weight matrix from the HopfieldNetwork class
     private int[][] inputs;             // inputs[i][j] gets element j from input vector i
@@ -33,10 +34,11 @@ public class Main {
      * @param numVectors Number of input vectors (also, number of total runs).
      * @param numNeurons Number of neurons - note, this is constant across all runs.
      */
-	public Main(String inFile, String weightFile, int numVectors, int numNeurons)
+	public Main(String inFile, String weightFile, int numVectors, int numNeurons, int numCat)
 	{
 		this.numNeurons = numNeurons;
 		this.numVectors = numVectors;
+        this.numCat = numCat;
 
         try {
             inputs = readInputs(inFile, numVectors, numNeurons);
@@ -93,7 +95,7 @@ public class Main {
 	private ArrayList<Integer> initK()
     {
         ArrayList<Integer> k = new ArrayList<Integer>();
-        for (int i = 0; i < numNeurons; i++)
+        for (int i = 0; i < numCat; i++)
         {
             k.add(1);
         }
@@ -222,18 +224,20 @@ public class Main {
 
             case "i":   System.out.println("External Inputs:");
                         for (int i = 0; i < inputs[idx].length; i++) {
-                            System.out.print(inputs[idx]);
-                            if (i != inputs[idx].length - 1)
-                                System.out.print(", ");
+                            System.out.println(Arrays.toString(inputs[idx]));
+//                            if (i != inputs[idx].length - 1)
+//                                System.out.println(",");
                         }
                         System.out.print("\n");
 
             case "o":   System.out.println("Outputs:");
-                        for (int i = 0; i < output.length; i++) {
-                            System.out.print(output[i]);
-                            if (i != output.length - 1)
-                                System.out.print(", ");
-                        }
+                        for (double val : output)
+                            System.out.println("" + val);
+//                        for (int i = 0; i < output.length; i++) {
+//                            System.out.println(output[i]);
+//                            if (i != output.length - 1)
+//                                System.out.println(",");
+//                        }
                         System.out.print("\n");
 
             default:    System.out.println("Print Error: Incorrect file type");
@@ -243,7 +247,7 @@ public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException {
         // Create a new instance of the Main
-        new Main("inputs.csv", "weights.csv", 3, 10);
+        new Main("inputs.csv", "perm_weights.txt", 1, 16, 8);
 
     }
 

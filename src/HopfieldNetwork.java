@@ -72,10 +72,10 @@ public class HopfieldNetwork
 
         set_inputs(input_vector);
         init_activation(.3);
-        System.out.println("Running:");
+//        System.out.println("Running:");
         run();
-        System.out.println("Printing outputs:");
-        System.out.println(Arrays.toString(output));
+//        System.out.println("Printing outputs:");
+//        System.out.println(Arrays.toString(output));
 
         //print to catalog and close
         catalog.printToFile();
@@ -149,6 +149,7 @@ public class HopfieldNetwork
         {
             digital_states = true;
             firing_order = shuffle(firing_order);
+//            System.out.println(Arrays.toString(firing_order));
 
             for (int i = 0; i < convergence_count.length; i++)
                 convergence_count[i] = 0;
@@ -163,7 +164,7 @@ public class HopfieldNetwork
                         convergence_count[(int) category.get(i).get(j)]++;
                     }
                 }
-                System.out.println(Arrays.toString(convergence_count));
+//                System.out.println(Arrays.toString(convergence_count));
                 if ((output[index] * (1 - output[index])) >= epsilon)
                     digital_states = false;
 

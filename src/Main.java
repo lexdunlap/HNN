@@ -63,6 +63,7 @@ public class Main {
             /*
                 TODO: Pull k/categories from a file. Alternatively, generate categories based on weight matrix.
              */
+//            System.out.println(Arrays.toString(weights[i][0]));
             // Initial Hopfield stabilisation
             HopfieldNetwork hn = new HopfieldNetwork(
                     k, numNeurons, 1, .01, inputs[i], weights[i], .1, categories);
@@ -201,6 +202,16 @@ public class Main {
             }
         }
 
+        for (int i = 0; i < num_tables; i++)
+        {
+            for (int j = 0; j < numNeurons; j++)
+            {
+                for (int k = 0; k < numNeurons; k++)
+                {
+                    t_tables[i][j][k] *= -1;
+                }
+            }
+        }
         return t_tables;
     }
 

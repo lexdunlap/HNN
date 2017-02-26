@@ -44,6 +44,14 @@ public class Main {
             inputs = readInputs(inFile, numVectors, numNeurons);
             weights = readWeights(weightFile, numVectors, numNeurons);
 
+//            for (int i = 0; 0 < weights.length; i++)
+//            {
+//                for (int j = 0; j < weights[i].length; j++)
+//                {
+//                    System.out.println(Arrays.toString(weights[i][j]));
+//                }
+//            }
+
             System.out.print("Initialisation done. Beginning testing now.\n");
             testNetwork();
         } catch (IOException e) { e.printStackTrace(); }
@@ -189,7 +197,7 @@ public class Main {
 
         while (file.hasNextLine() && valid)
         {
-            String[] line = file.nextLine().split("\\s+");
+            String[] line = file.nextLine().split(",");
             if (line.length == 1)
             {
                 lc = 0;
@@ -258,7 +266,7 @@ public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException {
         // Create a new instance of the Main
-        new Main("inputs.csv", "perm_weights.txt", 1, 16, 8);
+        new Main("inputs.csv", "perm_weights.csv", 1, 16, 8);
 
     }
 

@@ -1,5 +1,9 @@
+import sun.jvm.hotspot.utilities.MessageQueue;
+
 import java.lang.Math;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -71,7 +75,11 @@ public class HopfieldNetwork
 
         set_inputs(input_vector);
         init_activation(.3);
+        System.out.println("initial activation: " + Arrays.toString(activation));
+//        System.out.println("Running:");
         run();
+//        System.out.println("Printing outputs:");
+//        System.out.println(Arrays.toString(output));
 
         //print to catalog and close
         catalog.printToFile();
@@ -131,7 +139,7 @@ public class HopfieldNetwork
     /**
      * Continually updates and calculates the activation of all neurons until convergence is reached.
      */
-    public void run()
+    private void run()
     {
         int[] convergence_count = new int[k.size()];
         boolean[] converged = new boolean[k.size()];
@@ -145,30 +153,50 @@ public class HopfieldNetwork
         {
             digital_states = true;
             firing_order = shuffle(firing_order);
+//            System.out.println("activation: " + Arrays.toString(activation));
+//            System.out.println("\n\nfiring_order: " + Arrays.toString(firing_order));
+//            System.out.println(Arrays.toString(firing_order));
 
             for (int i = 0; i < convergence_count.length; i++)
                 convergence_count[i] = 0;
 
-            for(int i = 0; i < n; i++) {
-                int index = firing_order[i];
+            for(int index : firing_order) {
                 update_neuron(index);
                 neuron_activation(index);
 
-                if (output[index] == prev_output[index]) {
-                    for (int j = 0; j < category.get(i).size(); j++) {
-                        convergence_count[(int) category.get(i).get(j)]++;
-                    }
-                }
+//                System.out.println("output:\t\t " + Arrays.toString(output));
+//                System.out.println("prev_output: " + Arrays.toString(prev_output));
 
+//                if (output[index] == prev_output[index]) {
+//                    for (int j = 0; j < category.get(index).size(); j++) {
+//                        convergence_count[(int) category.get(index).get(j)]++;
+//                    }
+//                }
+//                System.out.println(Arrays.toString(convergence_count));
                 if ((output[index] * (1 - output[index])) >= epsilon)
                     digital_states = false;
 
                 prev_output[index] = output[index];
             }
 
+            for (int i = 0; i < Math.sqrt(n); i++)
+            {
+                for (int j = 0; j < Math.sqrt(n); j++)
+                {
+                    int cIndex = ((int) (i * Math.sqrt(n)) + j);
+                    if (output[cIndex] == 1 &&
+                            output[cIndex] == prev_output[cIndex]){
+                        convergence_count[(int) category.get(i).get(1)]++;
+                        convergence_count[(int) category.get(i).get(0)]++;
+                    }
+                }
+            }
+
             // TODO: Set convergence_count[i] == k[i] BUT currently this breaks convergence and makes it run forever.
+            System.out.println("Convergence:    " + Arrays.toString(convergence_count));
+            System.out.println("Digital States: " + digital_states);
             for (int i = 0; i < k.size(); i++)
-                converged[i] = ((convergence_count[i] >= k.get(i)) && digital_states);
+                converged[i] = ((convergence_count[i] == k.get(i)) && digital_states);
 
             finished = check_all_bool(converged);
         }
@@ -220,7 +248,7 @@ public class HopfieldNetwork
     private void init_activation(double percent)
     {
         double rand;
-        int sum;
+        double sum;
         for (int i = 0; i < n; i++)
         {
             sum = 0;
@@ -228,7 +256,7 @@ public class HopfieldNetwork
             // TODO how to handle the initial activation for multiple sets?! Ahhh!
             for (int j = 0; j < category.get(j).size(); j++)
             {
-                sum += rand * ((2 * alpha) * (k.get((int) category.get(i).get(j)) / n) - alpha);
+                sum += rand * (((2 * alpha) * (k.get((int) category.get(i).get(j))) / n) - alpha);
             }
             activation[i] = sum;
         }
@@ -243,7 +271,6 @@ public class HopfieldNetwork
     private void update_neuron(int index)
     {
         double trans_output_dot = 0;
-
 
         for (int j = 0; j < n; j++)
         {

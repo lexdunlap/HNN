@@ -143,15 +143,18 @@ public class HopfieldNetwork
     {
         int[] convergence_count = new int[k.size()];
         boolean[] converged = new boolean[k.size()];
-        boolean digital_states, finished = false;
+        int nonDigital;
+        boolean finished = false;
         catalog.setDuringTest(this.output);
+        System.out.println((int) Math.sqrt(n));
+        double[][] out2D = new double[(int) Math.sqrt(n)][(int) Math.sqrt(n)];
 
         for (int i = 0; i < k.size(); i++)
             converged[i] = false;
 
         while (!finished)
         {
-            digital_states = true;
+            nonDigital = 0;
             firing_order = shuffle(firing_order);
 //            System.out.println("activation: " + Arrays.toString(activation));
 //            System.out.println("\n\nfiring_order: " + Arrays.toString(firing_order));
@@ -173,8 +176,9 @@ public class HopfieldNetwork
 //                    }
 //                }
 //                System.out.println(Arrays.toString(convergence_count));
+
                 if ((output[index] * (1 - output[index])) >= epsilon)
-                    digital_states = false;
+                    nonDigital++;
 
                 prev_output[index] = output[index];
             }
@@ -184,20 +188,43 @@ public class HopfieldNetwork
                 for (int j = 0; j < Math.sqrt(n); j++)
                 {
                     int cIndex = ((int) (i * Math.sqrt(n)) + j);
-                    if (output[cIndex] == 1 &&
-                            output[cIndex] == prev_output[cIndex]){
-                        convergence_count[(int) category.get(i).get(1)]++;
-                        convergence_count[(int) category.get(i).get(0)]++;
-                    }
+                    out2D[i][j] = output[cIndex];
+                    System.out.println(Arrays.toString(output));
                 }
+                System.out.println(Arrays.toString(out2D[i]));
+            }
+
+            for (int i = 0; i < Math.sqrt(n); i++)
+            {
+                int rowSum = 0, colSum = 0;
+                for (int j = 0; j < Math.sqrt(n); j++)
+                {
+                    if (out2D[i][j] == 1)
+                        rowSum++;
+                    if (out2D[j][i] == 1)
+                        colSum++;
+                }
+
+//                System.out.printf("row sum: \t %d\ncol sum: \t %d\n", rowSum, colSum);
+
+                if (rowSum == 1)
+                    converged[i] = true;
+                else
+                    converged[i] = false;
+
+                if (colSum == 1)
+                    converged[(int) (Math.sqrt(n)) + i] = true;
+                else
+                    converged[(int) (Math.sqrt(n)) + i] = false;
             }
 
             // TODO: Set convergence_count[i] == k[i] BUT currently this breaks convergence and makes it run forever.
-            System.out.println("Convergence:    " + Arrays.toString(convergence_count));
-            System.out.println("Digital States: " + digital_states);
-            for (int i = 0; i < k.size(); i++)
-                converged[i] = ((convergence_count[i] == k.get(i)) && digital_states);
+//            System.out.println("Convergence:    " + Arrays.toString(convergence_count));
+//            System.out.println("Digital States: " + nonDigital);
+//            for (int i = 0; i < k.size(); i++)
+//                converged[i] = ((convergence_count[i] == k.get(i)) && nonDigital);
 
+//            System.out.println(Arrays.toString(converged));
             finished = check_all_bool(converged);
         }
         catalog.setPostTest(this.getOuput());
@@ -213,7 +240,13 @@ public class HopfieldNetwork
     private boolean check_all_bool(boolean[] bool_array)
     {
         for (boolean value : bool_array)
-            if (!value) return false;
+        {
+            if (!value)
+            {
+//                System.out.println("FALSE");
+                return false;
+            }
+        }
         return true;
     }
 

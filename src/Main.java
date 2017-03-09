@@ -4,7 +4,9 @@ import tester.Test;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
 import java.util.stream.Stream;
 
 /**
@@ -56,6 +58,12 @@ public class Main {
             testNetwork();
         } catch (IOException e) { e.printStackTrace(); }
 	}
+
+    public static void main(String[] args) throws FileNotFoundException {
+        // Create a new instance of the Main
+        new Main("inputs.csv", "perm_weights.csv", 1, 16, 8);
+
+    }
 
     /**
      *
@@ -250,8 +258,9 @@ public class Main {
                         System.out.print("\n");
 
             case "o":   System.out.println("Outputs:");
-                        for (double val : output)
-                            System.out.println("" + val);
+                System.out.println(Arrays.toString(output));
+//                        for (double val : output)
+//                            System.out.println("" + val);
 //                        for (int i = 0; i < output.length; i++) {
 //                            System.out.println(output[i]);
 //                            if (i != output.length - 1)
@@ -262,12 +271,6 @@ public class Main {
             default:    System.out.println("Print Error: Incorrect file type");
 
         }
-    }
-
-	public static void main(String[] args) throws FileNotFoundException {
-        // Create a new instance of the Main
-        new Main("inputs.csv", "perm_weights.csv", 1, 16, 8);
-
     }
 
 //	public void FileReader(String fileName, String type) throws FileNotFoundException{

@@ -1,7 +1,3 @@
-import sun.jvm.hotspot.utilities.MessageQueue;
-
-import java.lang.Math;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
@@ -147,10 +143,7 @@ public class HopfieldNetwork
         boolean finished = false;
         catalog.setDuringTest(this.output);
         System.out.println((int) Math.sqrt(n));
-        double[][] out2D = new double[(int) Math.sqrt(n)][(int) Math.sqrt(n)];
-
-        for (int i = 0; i < k.size(); i++)
-            converged[i] = false;
+        double[][] out2D;
 
         while (!finished)
         {
@@ -163,6 +156,7 @@ public class HopfieldNetwork
             for (int i = 0; i < convergence_count.length; i++)
                 convergence_count[i] = 0;
 
+            // Updates current neuron activation and output for each neuron in the firing order
             for(int index : firing_order) {
                 update_neuron(index);
                 neuron_activation(index);
@@ -183,40 +177,9 @@ public class HopfieldNetwork
                 prev_output[index] = output[index];
             }
 
-            for (int i = 0; i < Math.sqrt(n); i++)
-            {
-                for (int j = 0; j < Math.sqrt(n); j++)
-                {
-                    int cIndex = ((int) (i * Math.sqrt(n)) + j);
-                    out2D[i][j] = output[cIndex];
-                    System.out.println(Arrays.toString(output));
-                }
-                System.out.println(Arrays.toString(out2D[i]));
-            }
-
-            for (int i = 0; i < Math.sqrt(n); i++)
-            {
-                int rowSum = 0, colSum = 0;
-                for (int j = 0; j < Math.sqrt(n); j++)
-                {
-                    if (out2D[i][j] == 1)
-                        rowSum++;
-                    if (out2D[j][i] == 1)
-                        colSum++;
-                }
-
-//                System.out.printf("row sum: \t %d\ncol sum: \t %d\n", rowSum, colSum);
-
-                if (rowSum == 1)
-                    converged[i] = true;
-                else
-                    converged[i] = false;
-
-                if (colSum == 1)
-                    converged[(int) (Math.sqrt(n)) + i] = true;
-                else
-                    converged[(int) (Math.sqrt(n)) + i] = false;
-            }
+            out2D = genOutputMatrix();
+            converged = checkConvergence(out2D);
+            finished = check_all_bool(converged);
 
             // TODO: Set convergence_count[i] == k[i] BUT currently this breaks convergence and makes it run forever.
 //            System.out.println("Convergence:    " + Arrays.toString(convergence_count));
@@ -225,9 +188,65 @@ public class HopfieldNetwork
 //                converged[i] = ((convergence_count[i] == k.get(i)) && nonDigital);
 
 //            System.out.println(Arrays.toString(converged));
-            finished = check_all_bool(converged);
         }
         catalog.setPostTest(this.getOuput());
+    }
+
+    /**
+     * Generates a 2D array (matrix) from the calculated output array. This is done by splitting
+     * up the output array, which is of length n, into sqrt(n) rows of sqrt(n) length. Effectively,
+     * this breaks the 1D output vector after sqrt(n) elements have been seen, storing the first
+     * sqrt(n) elements as the first row. Then, the same is done for all elements after the
+     * breakpoint until all elements have been seen.
+     *
+     * @return out2D: A 2D array generated from the output array, having sqrt(n) rows and columns.
+     */
+    private double[][] genOutputMatrix() {
+        double[][] out2D = new double[(int) Math.sqrt(n)][(int) Math.sqrt(n)];
+
+        for (int i = 0; i < Math.sqrt(n); i++) {
+            for (int j = 0; j < Math.sqrt(n); j++) {
+                int cIndex = ((int) (i * Math.sqrt(n)) + j);
+                out2D[i][j] = output[cIndex];
+                System.out.println(Arrays.toString(output));
+            }
+            System.out.println(Arrays.toString(out2D[i]));
+        }
+
+        return out2D;
+    }
+
+    /**
+     * Checks to see if the network has converged to a permutation matrix by summing all rows and
+     * columns. If the sum for each row and column is equal to 1, then the network has converged.
+     *
+     * @param out2D: 2-dimensional array holding the output values for each neuron.
+     * @return converged: an array holding boolean convergence values for each category.
+     */
+    private boolean[] checkConvergence(double[][] out2D) {
+        boolean[] converged = new boolean[k.size()];
+
+        for (int i = 0; i < Math.sqrt(n); i++) {
+            int rowSum = 0, colSum = 0;
+            for (int j = 0; j < Math.sqrt(n); j++) {
+                if (out2D[i][j] == 1)
+                    rowSum++;
+                if (out2D[j][i] == 1)
+                    colSum++;
+            }
+
+//                System.out.printf("row sum: \t %d\ncol sum: \t %d\n", rowSum, colSum);
+
+            converged[i] = rowSum == 1;
+            converged[(int) (Math.sqrt(n)) + i] = colSum == 1;
+        }
+        return converged;
+    }
+
+    private boolean[] ntqpConvergence(double[][] out2D) {
+        boolean[] converged = new boolean[k.size()];
+
+        return converged;
     }
 
     /**

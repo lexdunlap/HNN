@@ -243,8 +243,39 @@ public class HopfieldNetwork
         return converged;
     }
 
-    private boolean[] ntqpConvergence(double[][] out2D) {
-        boolean[] converged = new boolean[k.size()];
+    /**
+     * Used for checking diagonal sums. Diagonal convergence is reached when at most one neuron
+     * is active for a given diagonal category.
+     *
+     * @param out2D: Matrix of output values for all neurons in the network split into sqrt(n) rows.
+     * @return
+     */
+    private boolean[] diagConvergence(double[][] out2D) {
+        boolean[] converged = checkConvergence(out2D);          // Checks rows & columns
+        boolean[] negDiag = new boolean[(int) (2 * Math.sqrt(n) - 1)];
+        boolean[] posDiag = new boolean[(int) (2 * Math.sqrt(n) - 1)];
+
+        // Negative diagonal sum
+        for (int i = 0; i < Math.sqrt(n); i++) {
+        }
+        for (int i = (int) Math.sqrt(n); i < 2 * Math.sqrt(n) - 1; i++) {
+        }
+
+        // Positive diagonal sum
+        for (int i = 0; i < Math.sqrt(n); i++) {
+            int diagSum = 0;
+            for (int j = 0; j < i; j++)
+                diagSum += out2D[i - j][j];
+            if (diagSum <= 1)
+                posDiag[i] = true;
+        }
+        for (int i = (int) Math.sqrt(n); i <= 2 * Math.sqrt(n) - 1; i++) {
+            int diagSum = 0;
+            for (int j = 0; j < i; j++)
+                diagSum += out2D[(int) Math.sqrt(n) - j][j];
+            if (diagSum <= 1)
+                posDiag[i] = true;
+        }
 
         return converged;
     }

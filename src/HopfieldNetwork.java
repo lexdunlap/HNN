@@ -178,7 +178,8 @@ public class HopfieldNetwork
             }
 
             out2D = genOutputMatrix();
-            converged = checkConvergence(out2D);
+//            converged = checkConvergence(out2D);
+            converged = diagConvergence(out2D);
             finished = check_all_bool(converged);
 
             // TODO: Set convergence_count[i] == k[i] BUT currently this breaks convergence and makes it run forever.
@@ -254,27 +255,63 @@ public class HopfieldNetwork
         boolean[] converged = checkConvergence(out2D);          // Checks rows & columns
         boolean[] negDiag = new boolean[(int) (2 * Math.sqrt(n) - 1)];
         boolean[] posDiag = new boolean[(int) (2 * Math.sqrt(n) - 1)];
+        System.out.println(negDiag.length);
+        System.out.println(posDiag.length);
 
         // Negative diagonal sum
+        int pCount = 0;
+        System.out.println("Upper negative diagonal");
         for (int i = 0; i < Math.sqrt(n); i++) {
+            int diagSum = 0;
+            for (int j = i; j > 0; j--) {
+                diagSum += out2D[i][(int) Math.sqrt(n) - j];
+                System.out.println("i: " + i + "\tj: " + (Math.sqrt(n) - j));
+            }
+            if (diagSum <= 1)
+                negDiag[pCount] = true;
+            pCount++;
         }
-        for (int i = (int) Math.sqrt(n); i < 2 * Math.sqrt(n) - 1; i++) {
+        System.out.println("Lower negative diagonal");
+        for (int i = 1; i < Math.sqrt(n); i++) {
+            int diagSum = 0;
+            for (int j = 0; j <= i; j++) {
+                diagSum += out2D[i][j];
+                System.out.println("i: " + i + "\tj: " + j);
+            }
+            if (diagSum <= 1)
+                negDiag[pCount] = true;
+            pCount++;
         }
 
         // Positive diagonal sum
+        System.out.println("Upper positive diagonal");
+        pCount = 0;
         for (int i = 0; i < Math.sqrt(n); i++) {
             int diagSum = 0;
-            for (int j = 0; j < i; j++)
+            for (int j = 0; j < i; j++) {
                 diagSum += out2D[i - j][j];
+                System.out.println("i: " + (i - j) + "\tj: " + j);
+            }
             if (diagSum <= 1)
-                posDiag[i] = true;
+                posDiag[pCount] = true;
+            System.out.println(pCount);
+            pCount++;
         }
-        for (int i = (int) Math.sqrt(n); i <= 2 * Math.sqrt(n) - 1; i++) {
+        System.out.println("Lower positive diagonal");
+        for (int i = 1; i < Math.sqrt(n); i++) {
             int diagSum = 0;
-            for (int j = 0; j < i; j++)
+            for (int j = i; j < Math.sqrt(n); j++) {
                 diagSum += out2D[(int) Math.sqrt(n) - j][j];
+                System.out.println("i: " + (int) (Math.sqrt(n) - j) + "\tj: " + j);
+            }
             if (diagSum <= 1)
-                posDiag[i] = true;
+                posDiag[pCount] = true;
+            System.out.println(pCount);
+            pCount++;
+        }
+
+        for (int i = 0; i <= (4 * n - 4 * Math.sqrt(n) + 1); i++) {
+            converged[(int) (2 * Math.sqrt(n) - 1) + i] = posDiag[i] && negDiag[i];
         }
 
         return converged;

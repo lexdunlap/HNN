@@ -262,8 +262,8 @@ public class HopfieldNetwork
 
         // Negative diagonal sum
         // TODO: make into while (pCount < sqrt)
-        System.out.println("");
         int pCount = 0;
+        // bottom left (inclusive) to main diagonal (non-inclusive)
         for (int i = sqrt - 1; i > 0; i--) {
             int diagSum = 0;
             for (int j = sqrt - 1; (j - i) >= 0; j--)
@@ -272,6 +272,7 @@ public class HopfieldNetwork
                 negDiag[pCount] = true;
             pCount++;
         }
+        // main diagonal (inclusive) to top right (inclusive)
         for (int i = 0; i < sqrt; i++) {
             int diagSum = 0;
             for (int j = sqrt - 1; (j - i) >= 0; j--)
@@ -282,60 +283,42 @@ public class HopfieldNetwork
         }
 
         // Positive diagonal sum
-        System.out.println("Upper positive diagonal");
-        pCount = 0;
-        for (int i = 0; i < sqrt; i++) {
-            int diagSum = 0;
-            for (int j = 0; j < i; j++) {
-                diagSum += out2D[i - j][j];
-                System.out.println("i: " + (i - j) + "\tj: " + j);
-            }
-            if (diagSum <= 1)
-                posDiag[pCount] = true;
-            System.out.println(pCount);
-            pCount++;
-        }
-        System.out.println("Lower positive diagonal");
-        for (int i = 1; i < sqrt; i++) {
-            int diagSum = 0;
-            for (int j = i; j < sqrt; j++) {
-                diagSum += out2D[sqrt - j][j];
-                System.out.println("i: " + sqrt - j + "\tj: " + j);
-            }
-            if (diagSum <= 1)
-                posDiag[pCount] = true;
-            System.out.println(pCount);
-            pCount++;
-        }
-
-        int midpointIndex = posDiag.length / 2;
         for (int i = 0; i < 2 * sqrt - 1; i++) {
-            converged[n + i] = negDiag[i];
-            if (i < sqrt) {
-                for (int j = midpointIndex - i; j <= midpointIndex + i; j += 2) {
-                    if (posDiag[j] && converged[n + i]) {
-                        converged[n + i] = false;
-                        break;
-                    } else if (posDiag[j] && converged[n + i]) {
-                        converged[n + i] = true;
-                    }
-                }
-            } else {
-                for (int j = midpointIndex - ((sqrt - 2) - (i % sqrt));
-                     j <= midpointIndex + ((sqrt - 2) - (i % sqrt)); j += 2) {
-                    if (posDiag[j] && converged[n + i]) {
-                        converged[n + i] = false;
-                        break;
-                    } else if (posDiag[j] && !converged[n + i]) {
-                        converged[n + i] = true;
-                    }
+            int sum = 0;
+            for (int j = 0; j < sqrt; j++) {
+                for (int k = 0; k < sqrt; k++) {
+                    if (i == (j + k))
+                        sum += out2D[j][k];
                 }
             }
+            if (sum <= 1)
+                posDiag[i] = true;
         }
 
-//        for (int i = 0; i <= (4 * n - 4 * sqrt + 1); i++) {
-//            converged[(int) (2 * sqrt - 1) + i] = posDiag[i] && negDiag[i];
-//        }
+        /* Checking convergence of each by comparing the sets that intersect
+           For sqrt(n) = 4:
+            neg(S3)  intersects  pos(S3)
+            neg(S2)  intersects  pos(S2, S4)
+            neg(S1)  intersects  pos(S1, S3, S5)
+            neg(S0)  intersects  pos(S0, S2, S4, S6)
+            neg(S-1) intersects  pos(S1, S3, S5)
+            neg(S-2) intersects  pos(S2, S4)
+            neg(S-3) intersects  pos(S3)
+         */
+        int midpt = posDiag.length / 2;
+        for (int i = 0; i < negDiag.length; i++) {
+            boolean diagConv = negDiag[i];
+            if (diagConv && (i < sqrt)) {
+                for (int j = midpt - i; j <= midpt + i; j += 2) {
+                    if (posDiag[j]) {
+                        diagConv = false;
+                        break;
+                    }
+                }
+            } else if (diagConv && (i >= sqrt)) {
+                for (int j = i - midpt)
+            }
+        }
 
         return converged;
     }

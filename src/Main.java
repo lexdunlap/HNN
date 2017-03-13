@@ -112,7 +112,8 @@ public class Main {
 	private ArrayList<Integer> initK()
     {
         ArrayList<Integer> k = new ArrayList<Integer>();
-        for (int i = 0; i < numCat; i++)
+        int totalCat = numCat + (int) Math.pow(2 * Math.sqrt(numCat) - 1, 2);
+        for (int i = 0; i < totalCat; i++)
         {
             k.add(1);
         }

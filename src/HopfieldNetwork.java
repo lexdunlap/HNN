@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class HopfieldNetwork
 {
     private int n;                          // k-neurons out of n total neurons
+    private int sqrt;                       // Math.sqrt(n)
     private double alpha;                   // Programmer-defined alpha value
     private double tau;                     // Programmer-defined tau value
     private double step_size;               // Integration step size used in activation function
@@ -51,6 +52,7 @@ public class HopfieldNetwork
 
         this.k = k;
         this.n = n;
+        sqrt = (int) Math.sqrt(n);
         this.step_size = step_size;
         this.alpha = alpha;
         tau = 2 * alpha;
@@ -142,7 +144,7 @@ public class HopfieldNetwork
         int nonDigital;
         boolean finished = false;
         catalog.setDuringTest(this.output);
-        System.out.println((int) Math.sqrt(n));
+        System.out.println(sqrt);
         double[][] out2D;
 
         while (!finished)
@@ -203,11 +205,11 @@ public class HopfieldNetwork
      * @return out2D: A 2D array generated from the output array, having sqrt(n) rows and columns.
      */
     private double[][] genOutputMatrix() {
-        double[][] out2D = new double[(int) Math.sqrt(n)][(int) Math.sqrt(n)];
+        double[][] out2D = new double[sqrt][sqrt];
 
-        for (int i = 0; i < Math.sqrt(n); i++) {
-            for (int j = 0; j < Math.sqrt(n); j++) {
-                int cIndex = ((int) (i * Math.sqrt(n)) + j);
+        for (int i = 0; i < sqrt; i++) {
+            for (int j = 0; j < sqrt; j++) {
+                int cIndex = (i * sqrt + j);
                 out2D[i][j] = output[cIndex];
                 System.out.println(Arrays.toString(output));
             }
@@ -227,9 +229,9 @@ public class HopfieldNetwork
     private boolean[] checkConvergence(double[][] out2D) {
         boolean[] converged = new boolean[k.size()];
 
-        for (int i = 0; i < Math.sqrt(n); i++) {
+        for (int i = 0; i < sqrt; i++) {
             int rowSum = 0, colSum = 0;
-            for (int j = 0; j < Math.sqrt(n); j++) {
+            for (int j = 0; j < sqrt; j++) {
                 if (out2D[i][j] == 1)
                     rowSum++;
                 if (out2D[j][i] == 1)
@@ -239,7 +241,7 @@ public class HopfieldNetwork
 //                System.out.printf("row sum: \t %d\ncol sum: \t %d\n", rowSum, colSum);
 
             converged[i] = rowSum == 1;
-            converged[(int) (Math.sqrt(n)) + i] = colSum == 1;
+            converged[sqrt + i] = colSum == 1;
         }
         return converged;
     }
@@ -253,31 +255,27 @@ public class HopfieldNetwork
      */
     private boolean[] diagConvergence(double[][] out2D) {
         boolean[] converged = checkConvergence(out2D);          // Checks rows & columns
-        boolean[] negDiag = new boolean[(int) (2 * Math.sqrt(n) - 1)];
-        boolean[] posDiag = new boolean[(int) (2 * Math.sqrt(n) - 1)];
+        boolean[] negDiag = new boolean[2 * sqrt - 1];
+        boolean[] posDiag = new boolean[2 * sqrt - 1];
         System.out.println(negDiag.length);
         System.out.println(posDiag.length);
 
         // Negative diagonal sum
+        // TODO: make into while (pCount < sqrt)
+        System.out.println("");
         int pCount = 0;
-        System.out.println("Upper negative diagonal");
-        for (int i = 0; i < Math.sqrt(n); i++) {
+        for (int i = sqrt - 1; i > 0; i--) {
             int diagSum = 0;
-            for (int j = i; j > 0; j--) {
-                diagSum += out2D[i][(int) Math.sqrt(n) - j];
-                System.out.println("i: " + i + "\tj: " + (Math.sqrt(n) - j));
-            }
+            for (int j = sqrt - 1; (j - i) >= 0; j--)
+                diagSum += out2D[j][j - i];
             if (diagSum <= 1)
                 negDiag[pCount] = true;
             pCount++;
         }
-        System.out.println("Lower negative diagonal");
-        for (int i = 1; i < Math.sqrt(n); i++) {
+        for (int i = 0; i < sqrt; i++) {
             int diagSum = 0;
-            for (int j = 0; j <= i; j++) {
-                diagSum += out2D[i][j];
-                System.out.println("i: " + i + "\tj: " + j);
-            }
+            for (int j = sqrt - 1; (j - i) >= 0; j--)
+                diagSum += out2D[j - i][j];
             if (diagSum <= 1)
                 negDiag[pCount] = true;
             pCount++;
@@ -286,7 +284,7 @@ public class HopfieldNetwork
         // Positive diagonal sum
         System.out.println("Upper positive diagonal");
         pCount = 0;
-        for (int i = 0; i < Math.sqrt(n); i++) {
+        for (int i = 0; i < sqrt; i++) {
             int diagSum = 0;
             for (int j = 0; j < i; j++) {
                 diagSum += out2D[i - j][j];
@@ -298,11 +296,11 @@ public class HopfieldNetwork
             pCount++;
         }
         System.out.println("Lower positive diagonal");
-        for (int i = 1; i < Math.sqrt(n); i++) {
+        for (int i = 1; i < sqrt; i++) {
             int diagSum = 0;
-            for (int j = i; j < Math.sqrt(n); j++) {
-                diagSum += out2D[(int) Math.sqrt(n) - j][j];
-                System.out.println("i: " + (int) (Math.sqrt(n) - j) + "\tj: " + j);
+            for (int j = i; j < sqrt; j++) {
+                diagSum += out2D[sqrt - j][j];
+                System.out.println("i: " + sqrt - j + "\tj: " + j);
             }
             if (diagSum <= 1)
                 posDiag[pCount] = true;
@@ -310,9 +308,34 @@ public class HopfieldNetwork
             pCount++;
         }
 
-        for (int i = 0; i <= (4 * n - 4 * Math.sqrt(n) + 1); i++) {
-            converged[(int) (2 * Math.sqrt(n) - 1) + i] = posDiag[i] && negDiag[i];
+        int midpointIndex = posDiag.length / 2;
+        for (int i = 0; i < 2 * sqrt - 1; i++) {
+            converged[n + i] = negDiag[i];
+            if (i < sqrt) {
+                for (int j = midpointIndex - i; j <= midpointIndex + i; j += 2) {
+                    if (posDiag[j] && converged[n + i]) {
+                        converged[n + i] = false;
+                        break;
+                    } else if (posDiag[j] && converged[n + i]) {
+                        converged[n + i] = true;
+                    }
+                }
+            } else {
+                for (int j = midpointIndex - ((sqrt - 2) - (i % sqrt));
+                     j <= midpointIndex + ((sqrt - 2) - (i % sqrt)); j += 2) {
+                    if (posDiag[j] && converged[n + i]) {
+                        converged[n + i] = false;
+                        break;
+                    } else if (posDiag[j] && !converged[n + i]) {
+                        converged[n + i] = true;
+                    }
+                }
+            }
         }
+
+//        for (int i = 0; i <= (4 * n - 4 * sqrt + 1); i++) {
+//            converged[(int) (2 * sqrt - 1) + i] = posDiag[i] && negDiag[i];
+//        }
 
         return converged;
     }
@@ -321,7 +344,7 @@ public class HopfieldNetwork
      * Checks all boolean values in an array. Returns false on the first false element found. Returns true
      *    if all elements are true in the entire array.
      *
-     * @param bool_array Array of boolean values to check.
+     * @param bool_array: Array of boolean values to check.
      * @return true if all values are true; false if any values are false
      */
     private boolean check_all_bool(boolean[] bool_array)

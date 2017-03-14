@@ -21,6 +21,7 @@ public class Main {
 	private int numNeurons;             // Number of total neurons the network will have
 	private int numVectors;             // Number of input vectors in total - each network iteration utilises one vector
     private int numCat;
+    private int numSlack;
     private double[] output;
     private int[][] transition_table;   // Weight matrix from the HopfieldNetwork class
     private int[][] inputs;             // inputs[i][j] gets element j from input vector i
@@ -38,8 +39,10 @@ public class Main {
      */
 	public Main(String inFile, String weightFile, int numVectors, int numNeurons, int numCat)
 	{
-		this.numNeurons = numNeurons;
-		this.numVectors = numVectors;
+        numSlack = (int) ((4 * Math.sqrt(numNeurons)) - 2);
+        this.numNeurons = numNeurons + numSlack;
+        System.out.println("numSlack == " + numSlack + "\nnumNureosnd == " + this.numNeurons);
+        this.numVectors = numVectors;
         this.numCat = numCat;
 
         try {
@@ -61,7 +64,7 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
         // Create a new instance of the Main
-        new Main("inputs.csv", "ntqp.csv", 1, 36, 12);
+        new Main("inputs.csv", "ntqp4.csv", 1, 16, 12);
 
     }
 
@@ -82,8 +85,8 @@ public class Main {
 //            System.out.println(Arrays.toString(weights[i][0]));
             // Initial Hopfield stabilisation
             HopfieldNetwork hn = new HopfieldNetwork(
-                    k, numNeurons, 1, .01, inputs[i], weights[i], .1, categories);
-			this.transition_table = hn.getTransitionTable();
+                    k, numNeurons, 1, .01, inputs[i], weights[i], .1, categories, numSlack);
+            this.transition_table = hn.getTransitionTable();
 
             // Transition table testing
 			Test r = new Test(this.transition_table);

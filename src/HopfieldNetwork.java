@@ -147,11 +147,13 @@ public class HopfieldNetwork
      * @return out2D: A 2D array generated from the output array, having sqrt(n) rows and columns.
      */
     private double[][] genOutputMatrix() {
-        double[][] out2D = new double[sqrt][sqrt];
+        /*ToDo fix convergence checking reliance on output 2d
+         */
+        double[][] out2D = new double[nonSlackSqrt][nonSlackSqrt];
 
-        for (int i = 0; i < sqrt; i++) {
-            for (int j = 0; j < sqrt; j++) {
-                int cIndex = (i * sqrt + j);
+        for (int i = 0; i < nonSlackSqrt; i++) {
+            for (int j = 0; j < nonSlackSqrt; j++) {
+                int cIndex = (i * nonSlackSqrt + j);
                 out2D[i][j] = output[cIndex];
 //                System.out.println(Arrays.toString(output));
             }

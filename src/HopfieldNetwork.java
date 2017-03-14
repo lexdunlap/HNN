@@ -306,6 +306,7 @@ public class HopfieldNetwork
             neg(S-3) intersects  pos(S3)
          */
         int midpt = posDiag.length / 2;
+        int upIndex = 1;
         for (int i = 0; i < negDiag.length; i++) {
             boolean diagConv = negDiag[i];
             if (diagConv && (i < sqrt)) {
@@ -316,8 +317,15 @@ public class HopfieldNetwork
                     }
                 }
             } else if (diagConv && (i >= sqrt)) {
-                for (int j = i - midpt)
+                for (int j = upIndex; j <= posDiag.length - upIndex; j += 2) {
+                    if (posDiag[j]) {
+                        diagConv = false;
+                        break;
+                    }
+                }
+                upIndex++;
             }
+            converged[n + i] = diagConv;
         }
 
         return converged;

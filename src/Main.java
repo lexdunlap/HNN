@@ -61,7 +61,7 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
         // Create a new instance of the Main
-        new Main("inputs.csv", "perm_weights.csv", 1, 16, 8);
+        new Main("inputs.csv", "ntqp.csv", 1, 36, 12);
 
     }
 
@@ -112,7 +112,7 @@ public class Main {
 	private ArrayList<Integer> initK()
     {
         ArrayList<Integer> k = new ArrayList<Integer>();
-        int totalCat = numCat + (int) Math.pow(2 * Math.sqrt(numCat) - 1, 2);
+        int totalCat = (int) (6 * Math.sqrt(numNeurons) - 2);
         for (int i = 0; i < totalCat; i++)
         {
             k.add(1);
@@ -132,10 +132,11 @@ public class Main {
 	private ArrayList<ArrayList> categoriesNTQP()
 	{
 		ArrayList<ArrayList> categories = new ArrayList<ArrayList>();
-		for (int i = 0; i <= 3; i++)
-		{
-			for (int j = 4; j <= 7; j++)
-			{
+        int pdIndex = (int) (2 * Math.sqrt(numNeurons));
+        int ndIndex = pdIndex + (int) (2 * Math.sqrt(numNeurons) - 1);
+
+        for (int i = 0; i < Math.sqrt(numNeurons); i++) {
+            for (int j = (int) Math.sqrt(numNeurons); j < 2 * Math.sqrt(numNeurons); j++) {
 				ArrayList<Integer> cat = new ArrayList<Integer>();
 				cat.add(i);
 				cat.add(j);

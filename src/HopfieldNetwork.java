@@ -74,10 +74,7 @@ public class HopfieldNetwork
         set_inputs(input_vector);
         init_activation(.3);
         System.out.println("initial activation: " + Arrays.toString(activation));
-//        System.out.println("Running:");
         run();
-//        System.out.println("Printing outputs:");
-//        System.out.println(Arrays.toString(output));
 
         //print to catalog and close
         catalog.printToFile();
@@ -151,9 +148,6 @@ public class HopfieldNetwork
         {
             nonDigital = 0;
             firing_order = shuffle(firing_order);
-//            System.out.println("activation: " + Arrays.toString(activation));
-//            System.out.println("\n\nfiring_order: " + Arrays.toString(firing_order));
-//            System.out.println(Arrays.toString(firing_order));
 
             for (int i = 0; i < convergence_count.length; i++)
                 convergence_count[i] = 0;
@@ -162,16 +156,6 @@ public class HopfieldNetwork
             for(int index : firing_order) {
                 update_neuron(index);
                 neuron_activation(index);
-
-//                System.out.println("output:\t\t " + Arrays.toString(output));
-//                System.out.println("prev_output: " + Arrays.toString(prev_output));
-
-//                if (output[index] == prev_output[index]) {
-//                    for (int j = 0; j < category.get(index).size(); j++) {
-//                        convergence_count[(int) category.get(index).get(j)]++;
-//                    }
-//                }
-//                System.out.println(Arrays.toString(convergence_count));
 
                 if ((output[index] * (1 - output[index])) >= epsilon)
                     nonDigital++;
@@ -183,14 +167,6 @@ public class HopfieldNetwork
 //            converged = checkConvergence(out2D);
             converged = diagConvergence(out2D);
             finished = check_all_bool(converged);
-
-            // TODO: Set convergence_count[i] == k[i] BUT currently this breaks convergence and makes it run forever.
-//            System.out.println("Convergence:    " + Arrays.toString(convergence_count));
-//            System.out.println("Digital States: " + nonDigital);
-//            for (int i = 0; i < k.size(); i++)
-//                converged[i] = ((convergence_count[i] == k.get(i)) && nonDigital);
-
-//            System.out.println(Arrays.toString(converged));
         }
         catalog.setPostTest(this.getOuput());
     }
@@ -211,7 +187,7 @@ public class HopfieldNetwork
             for (int j = 0; j < sqrt; j++) {
                 int cIndex = (i * sqrt + j);
                 out2D[i][j] = output[cIndex];
-                System.out.println(Arrays.toString(output));
+//                System.out.println(Arrays.toString(output));
             }
             System.out.println(Arrays.toString(out2D[i]));
         }
@@ -237,9 +213,6 @@ public class HopfieldNetwork
                 if (out2D[j][i] == 1)
                     colSum++;
             }
-
-//                System.out.printf("row sum: \t %d\ncol sum: \t %d\n", rowSum, colSum);
-
             converged[i] = rowSum == 1;
             converged[sqrt + i] = colSum == 1;
         }
@@ -325,7 +298,7 @@ public class HopfieldNetwork
                 }
                 upIndex++;
             }
-            converged[n + i] = diagConv;
+            converged[(2 * sqrt) + i] = diagConv;
         }
 
         return converged;

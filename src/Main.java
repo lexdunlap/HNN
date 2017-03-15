@@ -39,15 +39,15 @@ public class Main {
      */
 	public Main(String inFile, String weightFile, int numVectors, int numNeurons, int numCat)
 	{
-        numSlack = (int) ((4 * Math.sqrt(numNeurons)) - 2);
-        this.numNeurons = numNeurons + numSlack;
-        System.out.println("numSlack == " + numSlack + "\nnumNureosnd == " + this.numNeurons);
+        this.numSlack = (int) ((4 * Math.sqrt(numNeurons)) - 2);
+        this.numNeurons = numNeurons + this.numSlack;
+        System.out.println("numSlack == " + this.numSlack + "\numNuerons == " + this.numNeurons);
         this.numVectors = numVectors;
         this.numCat = numCat;
 
         try {
             inputs = readInputs(inFile, numVectors, numNeurons);
-            weights = readWeights(weightFile, numVectors, numNeurons);
+            weights = readWeights(weightFile, numVectors, this.numNeurons);
 
 //            for (int i = 0; 0 < weights.length; i++)
 //            {
@@ -77,18 +77,18 @@ public class Main {
         ArrayList<Integer> k = initK();
         ArrayList<ArrayList> categories = categoriesNTQP();
 
-        // Loops through and stabilises each input/weight pair.
+        // Loops through and stabilizes each input/weight pair.
 		for (int i = 0; i < numVectors; i++) {
             /*
                 TODO: Pull k/categories from a file. Alternatively, generate categories based on weight matrix.
              */
 //            System.out.println(Arrays.toString(weights[i][0]));
-            // Initial Hopfield stabilisation
+            // Initial Hopfield stabilization
             HopfieldNetwork hn = new HopfieldNetwork(
                     k, numNeurons, 1, .01, inputs[i], weights[i], .1, categories, numSlack);
             this.transition_table = hn.getTransitionTable();
 
-            // Transition table testing
+           /* // Transition table testing
 			Test r = new Test(this.transition_table);
 			String results = r.getResults();
 			System.out.println(results);
@@ -100,7 +100,7 @@ public class Main {
 			OutputTest ot = new OutputTest(output, kNum, categories);
 			String outputResults = ot.getOutputResults();
 			System.out.println(outputResults);
-			PrintMatrix("o", i);
+			PrintMatrix("o", i);*/
 		}
 	}
 
@@ -218,6 +218,7 @@ public class Main {
                 if (mxc > num_tables)
                     valid = false;
             } else {
+            	
                 t_tables[mxc][lc] = Stream.of(line).mapToInt(Integer::parseInt).toArray();
                 lc++;
             }
@@ -229,6 +230,7 @@ public class Main {
             {
                 for (int k = 0; k < numNeurons; k++)
                 {
+                	System.out.println(numNeurons);
                     t_tables[i][j][k] *= -1;
                 }
             }

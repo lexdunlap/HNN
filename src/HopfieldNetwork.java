@@ -28,7 +28,7 @@ public class HopfieldNetwork
     private double[] prev_output;           // V(t-1)-Vector
     private ArrayList<ArrayList> category;  // Keeps track of category for a given neuron
     private ArrayList<Integer> k;           // k-out-of-n. k-neurons out of n total neurons
-    private Catalog catalog;
+//    private Catalog catalog;
 
     /**
      * Creates Hopfield Network, setting all initial programmer-defined values. Also generates
@@ -49,9 +49,9 @@ public class HopfieldNetwork
                            int[][] transition_table, double step_size, ArrayList<ArrayList> category,
                            int numSlack) throws java.io.IOException
     {
-        catalog = new Catalog();
-        catalog.setInputs(input_vector);
-        catalog.setTMatrix(transition_table);
+//        catalog = new Catalog();
+//        catalog.setInputs(input_vector);
+//        catalog.setTMatrix(transition_table);
 
         this.k = k;
         this.n = n;
@@ -82,8 +82,8 @@ public class HopfieldNetwork
         run();
 
         //print to catalog and close
-        catalog.printToFile();
-        catalog.closeFileWriter();
+//        catalog.printToFile();
+//        catalog.closeFileWriter();
     }
 
     /**
@@ -106,8 +106,8 @@ public class HopfieldNetwork
         boolean[] converged = new boolean[k.size()];
         int nonDigital;
         boolean finished = false;
-        catalog.setDuringTest(this.output);
-        System.out.println(sqrt);
+//        catalog.setDuringTest(this.output);
+//        System.out.println(sqrt);
         double[][] out2D;
 
         while (!finished)
@@ -134,7 +134,7 @@ public class HopfieldNetwork
             converged = diagConvergence(out2D);
             finished = check_all_bool(converged);
         }
-        catalog.setPostTest(this.getOuput());
+//        catalog.setPostTest(this.getOuput());
     }
 
     /**
@@ -147,7 +147,7 @@ public class HopfieldNetwork
      * @return out2D: A 2D array generated from the output array, having sqrt(n) rows and columns.
      */
     private double[][] genOutputMatrix() {
-        /*ToDo fix convergence checking reliance on output 2d
+        /*TODO fix convergence checking reliance on output 2d
          */
         double[][] out2D = new double[nonSlackSqrt][nonSlackSqrt];
 
@@ -159,6 +159,7 @@ public class HopfieldNetwork
             }
             System.out.println(Arrays.toString(out2D[i]));
         }
+        System.out.print("\n");
 
         return out2D;
     }
@@ -171,7 +172,7 @@ public class HopfieldNetwork
      * @return converged: an array holding boolean convergence values for each category.
      */
     private boolean[] checkConvergence(double[][] out2D) {
-        boolean[] converged = new boolean[k.size()];
+        boolean[] converged = new boolean[(k.size()) / 2];
 
         for (int i = 0; i < nonSlackSqrt; i++) {
             int rowSum = 0, colSum = 0;
@@ -198,8 +199,6 @@ public class HopfieldNetwork
         boolean[] converged = checkConvergence(out2D);          // Checks rows & columns
         boolean[] negDiag = new boolean[2 * nonSlackSqrt - 1];
         boolean[] posDiag = new boolean[2 * nonSlackSqrt - 1];
-        System.out.println(negDiag.length);
-        System.out.println(posDiag.length);
 
         // Negative diagonal sum
         // TODO: make into while (pCount < sqrt)
@@ -212,6 +211,7 @@ public class HopfieldNetwork
             if (diagSum <= 1)
                 negDiag[pCount] = true;
             pCount++;
+            
         }
         // main diagonal (inclusive) to top right (inclusive)
         for (int i = 0; i < nonSlackSqrt; i++) {
@@ -252,14 +252,14 @@ public class HopfieldNetwork
             boolean diagConv = negDiag[i];
             if (diagConv && (i < nonSlackSqrt)) {
                 for (int j = midpt - i; j <= midpt + i; j += 2) {
-                    if (posDiag[j]) {
+                    if (posDiag[j] == false) {
                         diagConv = false;
                         break;
                     }
                 }
             } else if (diagConv && (i >= nonSlackSqrt)) {
                 for (int j = upIndex; j <= posDiag.length - upIndex; j += 2) {
-                    if (posDiag[j]) {
+                    if (posDiag[j] == false) {
                         diagConv = false;
                         break;
                     }
@@ -268,7 +268,6 @@ public class HopfieldNetwork
             }
             converged[(2 * nonSlackSqrt) + i] = diagConv;
         }
-
         return converged;
     }
 

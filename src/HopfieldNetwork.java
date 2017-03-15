@@ -131,7 +131,7 @@ public class HopfieldNetwork
 
             out2D = genOutputMatrix();
 //            converged = checkConvergence(out2D);
-            converged = diagConvergence(out2D);
+            converged = diagConvergence(converged, out2D);
             finished = check_all_bool(converged);
         }
 //        catalog.setPostTest(this.getOuput());
@@ -171,9 +171,7 @@ public class HopfieldNetwork
      * @param out2D: 2-dimensional array holding the output values for each neuron.
      * @return converged: an array holding boolean convergence values for each category.
      */
-    private boolean[] checkConvergence(double[][] out2D) {
-        boolean[] converged = new boolean[(k.size()) / 2];
-
+    private boolean[] checkConvergence(boolean[] converged, double[][] out2D) {
         for (int i = 0; i < nonSlackSqrt; i++) {
             int rowSum = 0, colSum = 0;
             for (int j = 0; j < nonSlackSqrt; j++) {
@@ -182,6 +180,7 @@ public class HopfieldNetwork
                 if (out2D[j][i] == 1)
                     colSum++;
             }
+            System.out.printf("rowSum:\t%d\ncolSum:\t%d\n", rowSum, colSum);
             converged[i] = rowSum == 1;
             converged[nonSlackSqrt + i] = colSum == 1;
         }
@@ -195,8 +194,8 @@ public class HopfieldNetwork
      * @param out2D: Matrix of output values for all neurons in the network split into sqrt(n) rows.
      * @return
      */
-    private boolean[] diagConvergence(double[][] out2D) {
-        boolean[] converged = checkConvergence(out2D);          // Checks rows & columns
+    private boolean[] diagConvergence(boolean[] converged, double[][] out2D) {
+        converged = checkConvergence(converged, out2D);
         boolean[] negDiag = new boolean[2 * nonSlackSqrt - 1];
         boolean[] posDiag = new boolean[2 * nonSlackSqrt - 1];
 
@@ -246,28 +245,47 @@ public class HopfieldNetwork
             neg(S-2) intersects  pos(S2, S4)
             neg(S-3) intersects  pos(S3)
          */
-        int midpt = posDiag.length / 2;
-        int upIndex = 1;
+        // TODO: One issue is in this convergence checking - doesn't recognise feasible solutions.
+//        int midpt = posDiag.length / 2;
+//        int upIndex = 1;
+//        System.out.println("Beginning convergence checks.\n" +
+//                "categories =\t" + k.size() + "\n" + "converged =\t" + converged.length + "\n" +
+//                "converged =\t" + Arrays.toString(converged) + "\n" +
+//                "negDiag =\t" + Arrays.toString(negDiag) + "\n" +
+//                "posDiag =\t" + Arrays.toString(posDiag) + "\n");
+//        for (int i = 0; i < negDiag.length; i++) {
+//            boolean diagConv = negDiag[i];
+//            System.out.printf("negDiag%d:\t%b\n",i,negDiag[i]);
+//            if (diagConv && (i < nonSlackSqrt)) {
+//                for (int j = midpt - i; j <= midpt + i; j += 2) {
+//                    if (!posDiag[j]) {
+//                        System.out.printf("posDiag[%d]:\t%b\t\tBREAKING\n",j,posDiag[j]);
+//                        diagConv = false;
+//                        break;
+//                    }
+//                    System.out.printf("posDiag[%d]:\t%b\n",j,posDiag[j]);
+//                }
+//            } else if (diagConv && (i >= nonSlackSqrt)) {
+//                for (int j = upIndex; j <= posDiag.length - upIndex; j += 2) {
+//                    System.out.printf("upIndex:\t%d\nrange:\t(%d, %d)\n",upIndex,upIndex,posDiag.length - upIndex);
+//                    if (!posDiag[j]) {
+//                        System.out.printf("posDiag[%d]:\t%b\t\tBREAKING\n",j,posDiag[j]);
+//                        diagConv = false;
+//                        break;
+//                    }
+//                    System.out.printf("posDiag[%d]:\t%b\n",j,posDiag[j]);
+//                }
+//                upIndex++;
+//            }
+//            System.out.printf("Setting category %d to %b\n", (nonSlack - 1 + i), diagConv);
+//            converged[(2*nonSlackSqrt) + i] = diagConv;
+//            System.out.println(Arrays.toString(converged));
+//        }
         for (int i = 0; i < negDiag.length; i++) {
-            boolean diagConv = negDiag[i];
-            if (diagConv && (i < nonSlackSqrt)) {
-                for (int j = midpt - i; j <= midpt + i; j += 2) {
-                    if (posDiag[j] == false) {
-                        diagConv = false;
-                        break;
-                    }
-                }
-            } else if (diagConv && (i >= nonSlackSqrt)) {
-                for (int j = upIndex; j <= posDiag.length - upIndex; j += 2) {
-                    if (posDiag[j] == false) {
-                        diagConv = false;
-                        break;
-                    }
-                }
-                upIndex++;
-            }
-            converged[(2 * nonSlackSqrt) + i] = diagConv;
+            converged[2 * nonSlackSqrt + i] = negDiag[i];
+            converged[(2 * nonSlackSqrt) + (2 * nonSlackSqrt - 1) + i] = posDiag[i];
         }
+        System.out.println(Arrays.toString(converged));
         return converged;
     }
 

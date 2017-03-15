@@ -1,6 +1,3 @@
-import tester.OutputTest;
-import tester.Test;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -64,7 +61,7 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
         // Create a new instance of the Main
-        new Main("inputs.csv", "ntqp4.csv", 1, 16, 12);
+        new Main("inputs.csv", "ntqp4.csv", 1, 16, 22);
 
     }
 
@@ -115,7 +112,7 @@ public class Main {
 	private ArrayList<Integer> initK()
     {
         ArrayList<Integer> k = new ArrayList<Integer>();
-        int totalCat = (int) (6 * Math.sqrt(numNeurons) - 2);
+        int totalCat = numCat;
         for (int i = 0; i < totalCat; i++)
         {
             k.add(1);

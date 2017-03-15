@@ -1,10 +1,9 @@
-import tester.OutputTest;
-import tester.Test;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
 import java.util.stream.Stream;
 
 /**
@@ -19,6 +18,7 @@ public class Main {
 	private int numNeurons;             // Number of total neurons the network will have
 	private int numVectors;             // Number of input vectors in total - each network iteration utilises one vector
     private int numCat;
+    private int numSlack;
     private double[] output;
     private int[][] transition_table;   // Weight matrix from the HopfieldNetwork class
     private int[][] inputs;             // inputs[i][j] gets element j from input vector i
@@ -36,13 +36,15 @@ public class Main {
      */
 	public Main(String inFile, String weightFile, int numVectors, int numNeurons, int numCat)
 	{
-		this.numNeurons = numNeurons;
-		this.numVectors = numVectors;
+        this.numSlack = (int) ((4 * Math.sqrt(numNeurons)) - 2);
+        this.numNeurons = numNeurons + this.numSlack;
+        System.out.println("numSlack == " + this.numSlack + "\numNuerons == " + this.numNeurons);
+        this.numVectors = numVectors;
         this.numCat = numCat;
 
         try {
             inputs = readInputs(inFile, numVectors, numNeurons);
-            weights = readWeights(weightFile, numVectors, numNeurons);
+            weights = readWeights(weightFile, numVectors, this.numNeurons);
 
 //            for (int i = 0; 0 < weights.length; i++)
 //            {
@@ -57,6 +59,12 @@ public class Main {
         } catch (IOException e) { e.printStackTrace(); }
 	}
 
+    public static void main(String[] args) throws FileNotFoundException {
+        // Create a new instance of the Main
+        new Main("inputs.csv", "ntqp4.csv", 1, 16, 22);
+
+    }
+
     /**
      *
      * @throws IOException
@@ -66,18 +74,18 @@ public class Main {
         ArrayList<Integer> k = initK();
         ArrayList<ArrayList> categories = categoriesNTQP();
 
-        // Loops through and stabilises each input/weight pair.
+        // Loops through and stabilizes each input/weight pair.
 		for (int i = 0; i < numVectors; i++) {
             /*
                 TODO: Pull k/categories from a file. Alternatively, generate categories based on weight matrix.
              */
 //            System.out.println(Arrays.toString(weights[i][0]));
-            // Initial Hopfield stabilisation
+            // Initial Hopfield stabilization
             HopfieldNetwork hn = new HopfieldNetwork(
-                    k, numNeurons, 1, .01, inputs[i], weights[i], .1, categories);
-			this.transition_table = hn.getTransitionTable();
+                    k, numNeurons, 1, .01, inputs[i], weights[i], .1, categories, numSlack);
+            this.transition_table = hn.getTransitionTable();
 
-            // Transition table testing
+           /* // Transition table testing
 			Test r = new Test(this.transition_table);
 			String results = r.getResults();
 			System.out.println(results);
@@ -89,7 +97,7 @@ public class Main {
 			OutputTest ot = new OutputTest(output, kNum, categories);
 			String outputResults = ot.getOutputResults();
 			System.out.println(outputResults);
-			PrintMatrix("o", i);
+			PrintMatrix("o", i);*/
 		}
 	}
 
@@ -104,7 +112,8 @@ public class Main {
 	private ArrayList<Integer> initK()
     {
         ArrayList<Integer> k = new ArrayList<Integer>();
-        for (int i = 0; i < numCat; i++)
+        int totalCat = numCat;
+        for (int i = 0; i < totalCat; i++)
         {
             k.add(1);
         }
@@ -123,10 +132,11 @@ public class Main {
 	private ArrayList<ArrayList> categoriesNTQP()
 	{
 		ArrayList<ArrayList> categories = new ArrayList<ArrayList>();
-		for (int i = 0; i <= 3; i++)
-		{
-			for (int j = 4; j <= 7; j++)
-			{
+        int pdIndex = (int) (2 * Math.sqrt(numNeurons));
+        int ndIndex = pdIndex + (int) (2 * Math.sqrt(numNeurons) - 1);
+
+        for (int i = 0; i < Math.sqrt(numNeurons); i++) {
+            for (int j = (int) Math.sqrt(numNeurons); j < 2 * Math.sqrt(numNeurons); j++) {
 				ArrayList<Integer> cat = new ArrayList<Integer>();
 				cat.add(i);
 				cat.add(j);
@@ -205,6 +215,7 @@ public class Main {
                 if (mxc > num_tables)
                     valid = false;
             } else {
+            	
                 t_tables[mxc][lc] = Stream.of(line).mapToInt(Integer::parseInt).toArray();
                 lc++;
             }
@@ -216,6 +227,7 @@ public class Main {
             {
                 for (int k = 0; k < numNeurons; k++)
                 {
+                	System.out.println(numNeurons);
                     t_tables[i][j][k] *= -1;
                 }
             }
@@ -250,8 +262,9 @@ public class Main {
                         System.out.print("\n");
 
             case "o":   System.out.println("Outputs:");
-                        for (double val : output)
-                            System.out.println("" + val);
+                System.out.println(Arrays.toString(output));
+//                        for (double val : output)
+//                            System.out.println("" + val);
 //                        for (int i = 0; i < output.length; i++) {
 //                            System.out.println(output[i]);
 //                            if (i != output.length - 1)
@@ -262,12 +275,6 @@ public class Main {
             default:    System.out.println("Print Error: Incorrect file type");
 
         }
-    }
-
-	public static void main(String[] args) throws FileNotFoundException {
-        // Create a new instance of the Main
-        new Main("inputs.csv", "perm_weights.csv", 1, 16, 8);
-
     }
 
 //	public void FileReader(String fileName, String type) throws FileNotFoundException{

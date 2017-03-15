@@ -1,7 +1,3 @@
-import sun.jvm.hotspot.utilities.MessageQueue;
-
-import java.lang.Math;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
@@ -17,6 +13,9 @@ import java.util.concurrent.ThreadLocalRandom;
 public class HopfieldNetwork
 {
     private int n;                          // k-neurons out of n total neurons
+    private int nonSlack;
+    private int sqrt;                       // Math.sqrt(n)
+    private int nonSlackSqrt;
     private double alpha;                   // Programmer-defined alpha value
     private double tau;                     // Programmer-defined tau value
     private double step_size;               // Integration step size used in activation function
@@ -29,7 +28,7 @@ public class HopfieldNetwork
     private double[] prev_output;           // V(t-1)-Vector
     private ArrayList<ArrayList> category;  // Keeps track of category for a given neuron
     private ArrayList<Integer> k;           // k-out-of-n. k-neurons out of n total neurons
-    private Catalog catalog;
+//    private Catalog catalog;
 
     /**
      * Creates Hopfield Network, setting all initial programmer-defined values. Also generates
@@ -47,14 +46,18 @@ public class HopfieldNetwork
      * @param category vector telling the category of each neuron - should be of length 'n'
      */
     public HopfieldNetwork(ArrayList<Integer> k, int n, double alpha, double epsilon, int[] input_vector,
-                           int[][] transition_table, double step_size, ArrayList<ArrayList> category) throws java.io.IOException
+                           int[][] transition_table, double step_size, ArrayList<ArrayList> category,
+                           int numSlack) throws java.io.IOException
     {
-        catalog = new Catalog();
-        catalog.setInputs(input_vector);
-        catalog.setTMatrix(transition_table);
+//        catalog = new Catalog();
+//        catalog.setInputs(input_vector);
+//        catalog.setTMatrix(transition_table);
 
         this.k = k;
         this.n = n;
+        this.nonSlack = n - numSlack;
+        sqrt = (int) Math.sqrt(n);
+        nonSlackSqrt = (int) Math.sqrt(nonSlack);
         this.step_size = step_size;
         this.alpha = alpha;
         tau = 2 * alpha;
@@ -76,53 +79,11 @@ public class HopfieldNetwork
         set_inputs(input_vector);
         init_activation(.3);
         System.out.println("initial activation: " + Arrays.toString(activation));
-//        System.out.println("Running:");
         run();
-//        System.out.println("Printing outputs:");
-//        System.out.println(Arrays.toString(output));
 
         //print to catalog and close
-        catalog.printToFile();
-        catalog.closeFileWriter();
-    }
-
-    /**
-     * Constructor for creating a single-set network.
-     *
-     * TODO: Combine overlapping code from constructors and split constructors at a more efficient breakpoint.
-     *
-     * @param k
-     * @param n
-     * @param alpha
-     * @param input_vector
-     * @param transition_table
-     * @param step_size
-     */
-    public HopfieldNetwork(ArrayList<Integer> k, int n, double alpha, double epsilon,
-                           int[] input_vector, int[][] transition_table, double step_size)
-    {
-        this.k = k;
-        this.n = n;
-        this.step_size = step_size;
-        this.alpha = alpha;
-        this.input = input_vector;
-        tau = 2 * alpha;
-        this.epsilon = epsilon;
-
-        this.transition_table = transition_table;
-        activation = new double[n];
-        output = new double[n];
-        prev_output = new double[n];
-        firing_order = new int[n];
-
-        for (int i = 0; i < n; i++)
-        {
-            firing_order[i] = i;
-        }
-
-        set_inputs(input_vector);
-        init_activation(.3);
-        run();
+//        catalog.printToFile();
+//        catalog.closeFileWriter();
     }
 
     /**
@@ -143,77 +104,208 @@ public class HopfieldNetwork
     {
         int[] convergence_count = new int[k.size()];
         boolean[] converged = new boolean[k.size()];
-        boolean digital_states, finished = false;
-        catalog.setDuringTest(this.output);
-
-        for (int i = 0; i < k.size(); i++)
-            converged[i] = false;
+        int nonDigital;
+        boolean finished = false;
+//        catalog.setDuringTest(this.output);
+//        System.out.println(sqrt);
+        double[][] out2D;
 
         while (!finished)
         {
-            digital_states = true;
+            nonDigital = 0;
             firing_order = shuffle(firing_order);
-//            System.out.println("activation: " + Arrays.toString(activation));
-//            System.out.println("\n\nfiring_order: " + Arrays.toString(firing_order));
-//            System.out.println(Arrays.toString(firing_order));
 
             for (int i = 0; i < convergence_count.length; i++)
                 convergence_count[i] = 0;
 
+            // Updates current neuron activation and output for each neuron in the firing order
             for(int index : firing_order) {
                 update_neuron(index);
                 neuron_activation(index);
 
-//                System.out.println("output:\t\t " + Arrays.toString(output));
-//                System.out.println("prev_output: " + Arrays.toString(prev_output));
-
-//                if (output[index] == prev_output[index]) {
-//                    for (int j = 0; j < category.get(index).size(); j++) {
-//                        convergence_count[(int) category.get(index).get(j)]++;
-//                    }
-//                }
-//                System.out.println(Arrays.toString(convergence_count));
                 if ((output[index] * (1 - output[index])) >= epsilon)
-                    digital_states = false;
+                    nonDigital++;
 
                 prev_output[index] = output[index];
             }
 
-            for (int i = 0; i < Math.sqrt(n); i++)
-            {
-                for (int j = 0; j < Math.sqrt(n); j++)
-                {
-                    int cIndex = ((int) (i * Math.sqrt(n)) + j);
-                    if (output[cIndex] == 1 &&
-                            output[cIndex] == prev_output[cIndex]){
-                        convergence_count[(int) category.get(i).get(1)]++;
-                        convergence_count[(int) category.get(i).get(0)]++;
-                    }
-                }
-            }
-
-            // TODO: Set convergence_count[i] == k[i] BUT currently this breaks convergence and makes it run forever.
-            System.out.println("Convergence:    " + Arrays.toString(convergence_count));
-            System.out.println("Digital States: " + digital_states);
-            for (int i = 0; i < k.size(); i++)
-                converged[i] = ((convergence_count[i] == k.get(i)) && digital_states);
-
+            out2D = genOutputMatrix();
+//            converged = checkConvergence(out2D);
+            converged = diagConvergence(converged, out2D);
             finished = check_all_bool(converged);
         }
-        catalog.setPostTest(this.getOuput());
+//        catalog.setPostTest(this.getOuput());
+    }
+
+    /**
+     * Generates a 2D array (matrix) from the calculated output array. This is done by splitting
+     * up the output array, which is of length n, into sqrt(n) rows of sqrt(n) length. Effectively,
+     * this breaks the 1D output vector after sqrt(n) elements have been seen, storing the first
+     * sqrt(n) elements as the first row. Then, the same is done for all elements after the
+     * breakpoint until all elements have been seen.
+     *
+     * @return out2D: A 2D array generated from the output array, having sqrt(n) rows and columns.
+     */
+    private double[][] genOutputMatrix() {
+        /*TODO fix convergence checking reliance on output 2d
+         */
+        double[][] out2D = new double[nonSlackSqrt][nonSlackSqrt];
+
+        for (int i = 0; i < nonSlackSqrt; i++) {
+            for (int j = 0; j < nonSlackSqrt; j++) {
+                int cIndex = (i * nonSlackSqrt + j);
+                out2D[i][j] = output[cIndex];
+//                System.out.println(Arrays.toString(output));
+            }
+            System.out.println(Arrays.toString(out2D[i]));
+        }
+        System.out.print("\n");
+
+        return out2D;
+    }
+
+    /**
+     * Checks to see if the network has converged to a permutation matrix by summing all rows and
+     * columns. If the sum for each row and column is equal to 1, then the network has converged.
+     *
+     * @param out2D: 2-dimensional array holding the output values for each neuron.
+     * @return converged: an array holding boolean convergence values for each category.
+     */
+    private boolean[] checkConvergence(boolean[] converged, double[][] out2D) {
+        for (int i = 0; i < nonSlackSqrt; i++) {
+            int rowSum = 0, colSum = 0;
+            for (int j = 0; j < nonSlackSqrt; j++) {
+                if (out2D[i][j] == 1)
+                    rowSum++;
+                if (out2D[j][i] == 1)
+                    colSum++;
+            }
+            System.out.printf("rowSum:\t%d\ncolSum:\t%d\n", rowSum, colSum);
+            converged[i] = rowSum == 1;
+            converged[nonSlackSqrt + i] = colSum == 1;
+        }
+        return converged;
+    }
+
+    /**
+     * Used for checking diagonal sums. Diagonal convergence is reached when at most one neuron
+     * is active for a given diagonal category.
+     *
+     * @param out2D: Matrix of output values for all neurons in the network split into sqrt(n) rows.
+     * @return
+     */
+    private boolean[] diagConvergence(boolean[] converged, double[][] out2D) {
+        converged = checkConvergence(converged, out2D);
+        boolean[] negDiag = new boolean[2 * nonSlackSqrt - 1];
+        boolean[] posDiag = new boolean[2 * nonSlackSqrt - 1];
+
+        // Negative diagonal sum
+        // TODO: make into while (pCount < sqrt)
+        int pCount = 0;
+        // bottom left (inclusive) to main diagonal (non-inclusive)
+        for (int i = nonSlackSqrt - 1; i > 0; i--) {
+            int diagSum = 0;
+            for (int j = nonSlackSqrt - 1; (j - i) >= 0; j--)
+                diagSum += out2D[j][j - i];
+            if (diagSum <= 1)
+                negDiag[pCount] = true;
+            pCount++;
+            
+        }
+        // main diagonal (inclusive) to top right (inclusive)
+        for (int i = 0; i < nonSlackSqrt; i++) {
+            int diagSum = 0;
+            for (int j = nonSlackSqrt - 1; (j - i) >= 0; j--)
+                diagSum += out2D[j - i][j];
+            if (diagSum <= 1)
+                negDiag[pCount] = true;
+            pCount++;
+        }
+
+        // Positive diagonal sum
+        for (int i = 0; i < 2 * nonSlackSqrt - 1; i++) {
+            int sum = 0;
+            for (int j = 0; j < nonSlackSqrt; j++) {
+                for (int k = 0; k < nonSlackSqrt; k++) {
+                    if (i == (j + k))
+                        sum += out2D[j][k];
+                }
+            }
+            if (sum <= 1)
+                posDiag[i] = true;
+        }
+
+        /* Checking convergence of each by comparing the sets that intersect
+           For sqrt(n) = 4:
+            neg(S3)  intersects  pos(S3)
+            neg(S2)  intersects  pos(S2, S4)
+            neg(S1)  intersects  pos(S1, S3, S5)
+            neg(S0)  intersects  pos(S0, S2, S4, S6)
+            neg(S-1) intersects  pos(S1, S3, S5)
+            neg(S-2) intersects  pos(S2, S4)
+            neg(S-3) intersects  pos(S3)
+         */
+        // TODO: One issue is in this convergence checking - doesn't recognise feasible solutions.
+//        int midpt = posDiag.length / 2;
+//        int upIndex = 1;
+//        System.out.println("Beginning convergence checks.\n" +
+//                "categories =\t" + k.size() + "\n" + "converged =\t" + converged.length + "\n" +
+//                "converged =\t" + Arrays.toString(converged) + "\n" +
+//                "negDiag =\t" + Arrays.toString(negDiag) + "\n" +
+//                "posDiag =\t" + Arrays.toString(posDiag) + "\n");
+//        for (int i = 0; i < negDiag.length; i++) {
+//            boolean diagConv = negDiag[i];
+//            System.out.printf("negDiag%d:\t%b\n",i,negDiag[i]);
+//            if (diagConv && (i < nonSlackSqrt)) {
+//                for (int j = midpt - i; j <= midpt + i; j += 2) {
+//                    if (!posDiag[j]) {
+//                        System.out.printf("posDiag[%d]:\t%b\t\tBREAKING\n",j,posDiag[j]);
+//                        diagConv = false;
+//                        break;
+//                    }
+//                    System.out.printf("posDiag[%d]:\t%b\n",j,posDiag[j]);
+//                }
+//            } else if (diagConv && (i >= nonSlackSqrt)) {
+//                for (int j = upIndex; j <= posDiag.length - upIndex; j += 2) {
+//                    System.out.printf("upIndex:\t%d\nrange:\t(%d, %d)\n",upIndex,upIndex,posDiag.length - upIndex);
+//                    if (!posDiag[j]) {
+//                        System.out.printf("posDiag[%d]:\t%b\t\tBREAKING\n",j,posDiag[j]);
+//                        diagConv = false;
+//                        break;
+//                    }
+//                    System.out.printf("posDiag[%d]:\t%b\n",j,posDiag[j]);
+//                }
+//                upIndex++;
+//            }
+//            System.out.printf("Setting category %d to %b\n", (nonSlack - 1 + i), diagConv);
+//            converged[(2*nonSlackSqrt) + i] = diagConv;
+//            System.out.println(Arrays.toString(converged));
+//        }
+        for (int i = 0; i < negDiag.length; i++) {
+            converged[2 * nonSlackSqrt + i] = negDiag[i];
+            converged[(2 * nonSlackSqrt) + (2 * nonSlackSqrt - 1) + i] = posDiag[i];
+        }
+        System.out.println(Arrays.toString(converged));
+        return converged;
     }
 
     /**
      * Checks all boolean values in an array. Returns false on the first false element found. Returns true
      *    if all elements are true in the entire array.
      *
-     * @param bool_array Array of boolean values to check.
+     * @param bool_array: Array of boolean values to check.
      * @return true if all values are true; false if any values are false
      */
     private boolean check_all_bool(boolean[] bool_array)
     {
         for (boolean value : bool_array)
-            if (!value) return false;
+        {
+            if (!value)
+            {
+//                System.out.println("FALSE");
+                return false;
+            }
+        }
         return true;
     }
 

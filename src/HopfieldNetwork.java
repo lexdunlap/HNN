@@ -1,5 +1,8 @@
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -28,6 +31,9 @@ public class HopfieldNetwork
     private double[] prev_output;           // V(t-1)-Vector
     private ArrayList<ArrayList> category;  // Keeps track of category for a given neuron
     private ArrayList<Integer> k;           // k-out-of-n. k-neurons out of n total neurons
+    private double[][] out2D;
+    private boolean finished;
+    private int[] input_v;
 //    private Catalog catalog;
 
     /**
@@ -52,7 +58,7 @@ public class HopfieldNetwork
 //        catalog = new Catalog();
 //        catalog.setInputs(input_vector);
 //        catalog.setTMatrix(transition_table);
-
+    	this.input_v = input_vector;
         this.k = k;
         this.n = n;
         this.nonSlack = n - numSlack;
@@ -105,13 +111,34 @@ public class HopfieldNetwork
         int[] convergence_count = new int[k.size()];
         boolean[] converged = new boolean[k.size()];
         int nonDigital;
-        boolean finished = false;
+        finished = false;
 //        catalog.setDuringTest(this.output);
 //        System.out.println(sqrt);
-        double[][] out2D;
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+        	  @Override
+        	  public void run() {
+        		if (!finished){
+        			finished = true;
+        			int numSlack = n - nonSlack;
+        			try {
+        				System.out.println("I'm creating a new hopfield class");
+						new HopfieldNetwork(k, n, 1, .01, input_v, transition_table, .1, category, 
+								numSlack);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+            	    System.out.println("I am starting a new instance");
+        		}
+        	   
+        	    //System.exit(1);
+        	  }
+        	}, 4*100);
 
         while (!finished)
         {
+ 
             nonDigital = 0;
             firing_order = shuffle(firing_order);
 
@@ -131,9 +158,13 @@ public class HopfieldNetwork
 
             out2D = genOutputMatrix();
 //            converged = checkConvergence(out2D);
-            converged = diagConvergence(out2D);
+            converged = diagConvergence(converged, out2D);
             finished = check_all_bool(converged);
         }
+        
+        ChessBoard cb = new ChessBoard(out2D);
+        System.out.println(finished + " is the status of finished");
+        finished = true;
 //        catalog.setPostTest(this.getOuput());
     }
 
@@ -157,9 +188,9 @@ public class HopfieldNetwork
                 out2D[i][j] = output[cIndex];
 //                System.out.println(Arrays.toString(output));
             }
-            System.out.println(Arrays.toString(out2D[i]));
+           // System.out.println(Arrays.toString(out2D[i])); 
         }
-        System.out.print("\n");
+        //System.out.print("\n"); 
 
         return out2D;
     }
@@ -167,12 +198,11 @@ public class HopfieldNetwork
     /**
      * Checks to see if the network has converged to a permutation matrix by summing all rows and
      * columns. If the sum for each row and column is equal to 1, then the network has converged.
-     *
+     * 
      * @param out2D: 2-dimensional array holding the output values for each neuron.
      * @return converged: an array holding boolean convergence values for each category.
      */
-    private boolean[] checkConvergence(double[][] out2D) {
-        boolean[] converged = new boolean[(k.size()) / 2];
+    private boolean[] checkConvergence(boolean[] converged, double[][] out2D) {
 
         for (int i = 0; i < nonSlackSqrt; i++) {
             int rowSum = 0, colSum = 0;
@@ -182,6 +212,7 @@ public class HopfieldNetwork
                 if (out2D[j][i] == 1)
                     colSum++;
             }
+           // System.out.printf("rowSum:\t%d\ncolSum:\t%d\n", rowSum, colSum);
             converged[i] = rowSum == 1;
             converged[nonSlackSqrt + i] = colSum == 1;
         }
@@ -195,8 +226,8 @@ public class HopfieldNetwork
      * @param out2D: Matrix of output values for all neurons in the network split into sqrt(n) rows.
      * @return
      */
-    private boolean[] diagConvergence(double[][] out2D) {
-        boolean[] converged = checkConvergence(out2D);          // Checks rows & columns
+    private boolean[] diagConvergence(boolean[] converged, double[][] out2D) {
+    	converged = checkConvergence(converged, out2D);
         boolean[] negDiag = new boolean[2 * nonSlackSqrt - 1];
         boolean[] posDiag = new boolean[2 * nonSlackSqrt - 1];
 
@@ -246,27 +277,10 @@ public class HopfieldNetwork
             neg(S-2) intersects  pos(S2, S4)
             neg(S-3) intersects  pos(S3)
          */
-        int midpt = posDiag.length / 2;
-        int upIndex = 1;
+        
         for (int i = 0; i < negDiag.length; i++) {
-            boolean diagConv = negDiag[i];
-            if (diagConv && (i < nonSlackSqrt)) {
-                for (int j = midpt - i; j <= midpt + i; j += 2) {
-                    if (posDiag[j] == false) {
-                        diagConv = false;
-                        break;
-                    }
-                }
-            } else if (diagConv && (i >= nonSlackSqrt)) {
-                for (int j = upIndex; j <= posDiag.length - upIndex; j += 2) {
-                    if (posDiag[j] == false) {
-                        diagConv = false;
-                        break;
-                    }
-                }
-                upIndex++;
-            }
-            converged[(2 * nonSlackSqrt) + i] = diagConv;
+        	converged[2 * nonSlackSqrt + i] = negDiag[i];
+        	converged[(2 * nonSlackSqrt) + (2 * nonSlackSqrt - 1) + i] = posDiag[i];
         }
         return converged;
     }

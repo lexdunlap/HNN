@@ -24,7 +24,7 @@ public class Main {
     private int numSlack;
     private double[] output;
     private int[][] transition_table;   // Weight matrix from the HopfieldNetwork class
-    private int[][] inputs;             // inputs[i][j] gets element j from input vector i
+    public int[][] inputs;             // inputs[i][j] gets element j from input vector i
     private int[][][] weights;          // weights[i][j][k] gets element (j,k) from weight matrix i
 
     // TODO: Add loop for automatic testing.
@@ -64,7 +64,7 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
         // Create a new instance of the Main
-        new Main("inputs.csv", "ntqp4.csv", 1, 16, 12);
+        new Main("inputs.csv", "ntqp4.csv", 1, 16, 22);
 
     }
 
@@ -115,7 +115,7 @@ public class Main {
 	private ArrayList<Integer> initK()
     {
         ArrayList<Integer> k = new ArrayList<Integer>();
-        int totalCat = (int) (6 * Math.sqrt(numNeurons) - 2);
+        int totalCat = numCat;
         for (int i = 0; i < totalCat; i++)
         {
             k.add(1);
